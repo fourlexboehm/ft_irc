@@ -1,6 +1,6 @@
 #include "include/Server.hpp"
 
-int	main(int argc, char **argv)
+int main(int argc, char **argv)
 {
 	if (argc != 3)
 	{
@@ -8,9 +8,10 @@ int	main(int argc, char **argv)
 		return (-1);
 	}
 	// create a local server instance port and password from arguments
-	Server	server("127.0.0.1", atoi(argv[1]), std::string(argv[2]));
+	// todo replace atoi with allowed function
+	Server server("127.0.0.1", atoi(argv[1]), std::string(argv[2]));
 
-	int	client_socket;
+	int client_socket;
 	while (true)
 	{
 		client_socket = server.waitClient();
@@ -18,5 +19,6 @@ int	main(int argc, char **argv)
 			server.addClient(client_socket);
 		server.listenClients();
 	}
+	//todo add safe exit
 	return (0);
 }

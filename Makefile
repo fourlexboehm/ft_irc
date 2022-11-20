@@ -16,6 +16,9 @@ ${NAME}:	${OBJS}
 
 all:		${NAME}
 
+test: re
+	./ircserv 6666 "1"
+
 bonus:		all
 
 clean:
