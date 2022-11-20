@@ -94,7 +94,8 @@ void Server::listenClients()
 {
 //	std::list<user_t *>::iterator it;
 
-	char buffer[512];
+	//1500 bytes is the max routable packet size https://www.cloudflare.com/learning/network-layer/what-is-mtu/
+	char buffer[1500];
 	int len = -1;
 	this->readfds = this->activefds;
 	if (select(this->fd_max + 1, &this->readfds, NULL, NULL, NULL) == -1)
@@ -122,15 +123,28 @@ void Server::listenClients()
 		if (FD_ISSET(client_fd, &this->readfds))
 		{
 			len = -1;
-			memset(buffer, 0, 512);
-			len = recv(client_fd, buffer, 512, MSG_DONTWAIT);
+			//todo avoid having to memset the buffer every time
+			memset(buffer, 0, 1500);
+			len = recv(client_fd, buffer, 1500, MSG_DONTWAIT);
 			if (len == 0)
+				//todo impl safe exit
 				exit(420);
 			else if (len > 0)
-				printf("%s", buffer);
-			//todo handle command
+			{
+				std::string buff(buffer);
+				std::istringstream buff_stream(buffer);
+				// use separator to read lines of the buffer
+				//todo does newline in message break this?
+				for (std::string line; std::getline(buff_stream, line, '\n');)
+					it->second->commands.push_back(line);
+				//debugging
+				for (size_t i = 0; i < it->second->commands.size(); i++)
+				{
+					std::cout << "command: " << it->second->commands[i] << std::endl;
+				}
+//				parseCommand(it->second);
+			}
 		}
 	}
 }
-
 

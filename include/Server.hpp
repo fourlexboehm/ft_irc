@@ -7,21 +7,22 @@
 # include <iostream>
 # include <errno.h>
 # include <fcntl.h>
-#include <sys/select.h>
+# include <iostream>
+# include <sys/select.h>
 # include <vector>
 # include <unordered_map>
 # include <unordered_set>
 # include <utility>
 # include <fstream>
 # include <string>
-#include <signal.h>
+# include <sstream>
+# include <signal.h>
 
-# define OP_PASS                "password"
 typedef struct user {
 	int socket;
 	std::string nickname;
 	std::string username;
-	std::string buffer;
+	std::vector<std::string> commands;
 	bool is_server_op;
 	bool is_disconnected;
 	bool is_registered;
@@ -60,6 +61,7 @@ private:
 	//map of socket fds with user pointers
 	std::unordered_map<int, user_t *> users;
 	std::unordered_map<std::string, channel_t *> channels;
+
 };
 
 #endif
