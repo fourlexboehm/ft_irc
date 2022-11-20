@@ -12,12 +12,13 @@ int main(int argc, char **argv)
 	Server server("127.0.0.1", atoi(argv[1]), std::string(argv[2]));
 
 	int client_socket;
+	char buffer[512];
 	while (true)
 	{
 		client_socket = server.waitClient();
 		if (client_socket != -1)
 			server.addClient(client_socket);
-		server.listenClients();
+		server.listenClients(buffer);
 	}
 	//todo add safe exit
 	return (0);

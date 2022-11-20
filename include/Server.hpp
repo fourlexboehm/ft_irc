@@ -15,6 +15,7 @@
 # include <utility>
 # include <fstream>
 # include <string>
+# include <queue>
 # include <sstream>
 # include <signal.h>
 
@@ -22,7 +23,7 @@ typedef struct user {
 	int socket;
 	std::string nickname;
 	std::string username;
-	std::vector<std::string> commands;
+	std::queue<std::string> commands;
 	bool is_server_op;
 	bool is_disconnected;
 	bool is_registered;
@@ -45,7 +46,7 @@ public:
 
 	void addClient(int sockfd);
 
-	void listenClients();
+	void listenClients(char buffer[512]);
 
 private:
 	int sockfd;
