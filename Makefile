@@ -4,7 +4,7 @@ CC    = c++
 FLAGS = -Wall -Wextra -Werror -std=c++98
 RM	  = rm -f
  
-SRCS  =      main.cpp src/Server.cpp
+SRCS  =      main.cpp src/Server.cpp src/commandParser.cpp
 OBJS  = ${SRCS:.cpp=.o}
 
 .cpp.o:
@@ -17,7 +17,7 @@ ${NAME}:	${OBJS}
 all:		${NAME}
 
 test: re
-	./ircserv 6666 "1"
+	./ircserv 6667 "1"
 
 bonus:		all
 
