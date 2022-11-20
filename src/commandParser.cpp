@@ -1,5 +1,18 @@
 # include "../include/Server.hpp"
 
+static void executeCommand(user_t *user, std::string cmd)
+{
+	std::cout << "executing command: " << cmd << std::endl;
+	(void)user;
+//	std::string token = cmd.substr(0, cmd.find_first_of(' '));
+//	switch (token)
+//	{
+//		case "NICK":
+//			exit(5);
+//
+//	}
+}
+
 void parseCommands(user_t *user)
 {
 	while(!user->commands.empty())
@@ -9,7 +22,7 @@ void parseCommands(user_t *user)
 		if (cmd.back() != '\r')
 			//this message wasn't complete so we'll handle it later
 			return;
-//	executeCommand(user, cmd);
+	executeCommand(user, cmd);
 	user->commands.pop();
 	}
 

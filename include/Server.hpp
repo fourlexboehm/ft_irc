@@ -18,6 +18,7 @@
 # include <queue>
 # include <sstream>
 # include <signal.h>
+# include "commandParser.hpp"
 
 typedef struct user {
 	int socket;
@@ -40,9 +41,9 @@ typedef struct channel {
 
 class Server {
 public:
-	Server(std::string host, int port, std::string password);
+	Server(const std::string& host, int port, const std::string& password);
 
-	int waitClient();
+	int waitClient() const;
 
 	void addClient(int sockfd);
 

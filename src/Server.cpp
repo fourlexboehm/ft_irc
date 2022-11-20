@@ -4,7 +4,7 @@
 /// @param port Port to listen.
 /// @param server password
 
-Server::Server(std::string host, int port, std::string password)
+Server::Server(const std::string& host, int port, const std::string& password)
 {
 	FD_ZERO(&this->readfds);
 	FD_ZERO(&this->activefds);
@@ -59,7 +59,7 @@ Server::Server(std::string host, int port, std::string password)
 /// @brief Wait for a client connection.
 /// @return Client socket file descriptor.
 
-int Server::waitClient()
+int Server::waitClient() const
 {
 	int client_socket;
 	struct sockaddr_in client_address;
@@ -95,7 +95,7 @@ void Server::listenClients(char buffer[512])
 //	std::list<user_t *>::iterator it;
 
 	//1500 bytes is the max routable packet size https://www.cloudflare.com/learning/network-layer/what-is-mtu/
-	int len = -1;
+	size_t len = -1;
 	this->readfds = this->activefds;
 	if (select(this->fd_max + 1, &this->readfds, NULL, NULL, NULL) == -1)
 		return;
@@ -126,9 +126,8 @@ void Server::listenClients(char buffer[512])
 			memset(buffer, 0, 512);
 			len = recv(client_fd, buffer, 512, MSG_DONTWAIT);
 			if (len == 0)
-				//todo impl safe exit
-				exit(420);
-			else if (len > 0)
+				return ;
+			else
 			{
 				std::string buff(buffer);
 				std::istringstream buff_stream(buffer);
@@ -138,7 +137,7 @@ void Server::listenClients(char buffer[512])
 					std::getline(buff_stream, it->second->commands.front(), '\n');
 				for (std::string line; std::getline(buff_stream, line, '\n');)
 					it->second->commands.push(line);
-//				parseCommand(it->second);
+				parseCommands(it->second);
 			}
 		}
 	}
