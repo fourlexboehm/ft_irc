@@ -10,11 +10,13 @@
 # include <iostream>
 # include <sys/select.h>
 # include <vector>
-# include <unordered_map>
-# include <unordered_set>
+# include <map>
+# include <set>
 # include <utility>
 # include <fstream>
 # include <string>
+# include <stdlib.h>
+# include <cstring>
 # include <queue>
 # include <sstream>
 # include <signal.h>
@@ -30,13 +32,13 @@ typedef struct user {
 	bool is_registered;
 	bool is_banned;
 	bool is_authenticated;
-	std::unordered_map<std::string, struct channel *> channels;
+	std::map<std::string, struct channel *> channels;
 } user_t;
 
 typedef struct channel {
 	std::string name;
-	std::unordered_set<std::string> connected_users;
-	std::unordered_set<std::string> operators;
+	std::set<std::string> connected_users;
+	std::set<std::string> operators;
 } channel_t;
 
 class Server {
@@ -57,12 +59,14 @@ private:
 
 	std::string pass;
 
-	struct fd_set readfds;
-	struct fd_set activefds;
+//	struct fd_set readfds;
+	fd_set readfds;
+//	struct fd_set activefds;
+	fd_set activefds;
 
 	//map of socket fds with user pointers
-	std::unordered_map<int, user_t *> users;
-	std::unordered_map<std::string, channel_t *> channels;
+	std::map<int, user_t *> users;
+	std::map<std::string, channel_t *> channels;
 
 };
 
