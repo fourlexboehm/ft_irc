@@ -1,7 +1,7 @@
 
 NAME  = ircserv
 CC    = c++
-FLAGS = -Wall -Wextra -Werror -std=c++98
+FLAGS = -Wall -Wextra -Werror -std=c++98 -g
 RM	  = rm -f
  
 SRCS  =      main.cpp src/Server.cpp src/commandParser.cpp

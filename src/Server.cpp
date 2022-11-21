@@ -94,7 +94,6 @@ void Server::listenClients(char buffer[512])
 {
 //	std::list<user_t *>::iterator it;
 
-	//1500 bytes is the max routable packet size https://www.cloudflare.com/learning/network-layer/what-is-mtu/
 	size_t len = -1;
 	this->readfds = this->activefds;
 	if (select(this->fd_max + 1, &this->readfds, NULL, NULL, NULL) == -1)
@@ -114,6 +113,7 @@ void Server::listenClients(char buffer[512])
 //			std::list<user_t *>::iterator it;
 			for (std::map<int, user_t *>::iterator it = users.begin(); it != users.end(); ++it)
 			{
+//todo infinate loop here
 				std::cout << "user: " << (*it).second->nickname << std::endl;
 			}
 			std::cout << "--------------------------" << std::endl;

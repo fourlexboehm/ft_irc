@@ -19,7 +19,7 @@ void parseCommands(user_t *user)
 	{
 		std::string cmd = user->commands.front();
 		//todo cr or nl?
-		if (cmd.back() != '\r')
+		if (cmd[cmd.size() -1] != '\r')
 			//this message wasn't complete so we'll handle it later
 			return;
 	executeCommand(user, cmd);
