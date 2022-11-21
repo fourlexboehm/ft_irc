@@ -6,6 +6,6 @@
 #define FT_IRC_COMMANDPARSER_H
 //typedef user_t;
 
-void parseCommands(struct user *user);
+//void parseCommands(struct user *user);
 
 #endif //FT_IRC_COMMANDPARSER_H

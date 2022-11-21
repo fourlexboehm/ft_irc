@@ -20,7 +20,7 @@
 # include <queue>
 # include <sstream>
 # include <signal.h>
-# include "commandParser.hpp"
+# include "commands.hpp"
 
 typedef struct user {
 	int socket;
@@ -43,13 +43,15 @@ typedef struct channel {
 
 class Server {
 public:
-	Server(const std::string& host, int port, const std::string& password);
+	Server(const std::string &host, int port, const std::string &password);
 
 	int waitClient() const;
 
 	void addClient(int sockfd);
 
 	void listenClients(char buffer[512]);
+
+	void sendMessageRPL(user_t *user, std::string rpl_code, std::string message);
 
 private:
 	int sockfd;
@@ -68,6 +70,13 @@ private:
 	std::map<int, user_t *> users;
 	std::map<std::string, channel_t *> channels;
 
+	static void execNic(user_t *user, const std::string &cmd);
+
+	void executeCommand(user_t *user, const std::string& cmd);
+
+	void execUser(user_t *user, const std::string &cmd);
+
+	void parseCommands(user_t *user);
 };
 
 #endif

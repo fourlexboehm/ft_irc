@@ -56,6 +56,7 @@ Server::Server(const std::string& host, int port, const std::string& password)
 	FD_SET(newSockFd, &this->activefds);
 }
 
+
 /// @brief Wait for a client connection.
 /// @return Client socket file descriptor.
 
@@ -109,15 +110,15 @@ void Server::listenClients(char buffer[512])
 			this->users.erase(it);
 			break;
 		}
-		{
+//		{
 //			std::list<user_t *>::iterator it;
-			for (std::map<int, user_t *>::iterator it = users.begin(); it != users.end(); ++it)
-			{
+//			for (std::map<int, user_t *>::iterator it = users.begin(); it != users.end(); ++it)
+//			{
 //todo infinate loop here
-				std::cout << "user: " << (*it).second->nickname << std::endl;
-			}
-			std::cout << "--------------------------" << std::endl;
-		}
+//				std::cout << "user: " << (*it).second->nickname << std::endl;
+//			}
+//			std::cout << "--------------------------" << std::endl;
+//		}
 		int client_fd = (*it).second->socket;
 		if (FD_ISSET(client_fd, &this->readfds))
 		{
@@ -141,5 +142,14 @@ void Server::listenClients(char buffer[512])
 			}
 		}
 	}
+
+}
+
+void	Server::sendMessageRPL(user_t * user, std::string rpl_code, std::string message)
+{
+	std::string	hostname = ":" + this->host;
+	std::string	rpl = hostname + " " + rpl_code + " " + user->nickname + " " + message + "\n";
+
+	send(user->socket, rpl.c_str(), rpl.length(), MSG_NOSIGNAL);
 }
 
