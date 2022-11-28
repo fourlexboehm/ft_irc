@@ -20,10 +20,11 @@ Server::Server(const std::string &host, int port, const std::string &password)
 	this->port = port;
 	this->pass = password;
 
-	std::cout <<
+	std::cout << BYEL <<
 	"Host: " << this->host << std::endl <<
 	"Port: " << this->port << std::endl <<
-	"Password: " << this->pass << std::endl;
+	"Password: " << this->pass << COLOR_RESET <<
+	std::endl;
 
 	struct sockaddr_in options = {};
 
@@ -92,6 +93,15 @@ void Server::addClient(int client_socket)
 	user->is_banned = false;
 	user->is_disconnected = false;
 	user->nickname = "";
+
+	std::cout <<
+	"New User Connected.\n" <<
+	"Socket: " << user->socket << std::endl <<
+	"Authenticated: " << user->is_authenticated << std::endl <<
+	"Registered: " << user->is_registered << std::endl <<
+	"Banned: " << user->is_banned << std::endl <<
+	"Disconnected: " << user->is_disconnected << std::endl;
+
 	this->pre_nick_users.insert(user);
 }
 
@@ -112,7 +122,6 @@ void Server::handle_client(user_t *it, char buffer[512])
 		this->pre_nick_users.erase(it);
 		delete it;
 		return;
-		//todo break!
 	}
 	int client_fd = it->socket;
 	if (FD_ISSET(client_fd, &this->readfds))

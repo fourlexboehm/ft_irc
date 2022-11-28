@@ -21,6 +21,7 @@
 # include <sstream>
 # include <signal.h>
 # include "commands.hpp"
+# include "ansi_colours.hpp"
 
 # ifdef __APPLE__
 	# define MSG_NOSIGNAL	0x20000

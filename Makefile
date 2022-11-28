@@ -16,7 +16,7 @@ ${NAME}:	${OBJS}
 
 all:		${NAME}
 
-test: re
+test: all
 	./ircserv 6667 "1"
 
 bonus:		all
