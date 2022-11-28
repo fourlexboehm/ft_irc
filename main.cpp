@@ -9,6 +9,7 @@ int main(int argc, char **argv)
 	}
 	// create a local server instance port and password from arguments
 	// todo replace atoi with allowed function
+	std::cout << "Connect with /connect localhost" << std::endl;
 	Server server("127.0.0.1", atoi(argv[1]), std::string(argv[2]));
 
 	int client_socket;

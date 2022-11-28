@@ -22,7 +22,7 @@ test: re
 bonus:		all
 
 clean:
-			@ ${RM} *.o */*.o */*/*.o
+			@ ${RM} $(OBJS)
 
 fclean:		clean
 			@ ${RM} ${NAME}

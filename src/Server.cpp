@@ -7,6 +7,7 @@
 
 Server::Server(const std::string &host, int port, const std::string &password)
 {
+	std::cout << "Initialising server." << std::endl;
 	FD_ZERO(&this->readfds);
 	FD_ZERO(&this->activefds);
 	this->fd_max = 0;
@@ -18,6 +19,12 @@ Server::Server(const std::string &host, int port, const std::string &password)
 	this->host = host;
 	this->port = port;
 	this->pass = password;
+
+	std::cout <<
+	"Host: " << this->host << std::endl <<
+	"Port: " << this->port << std::endl <<
+	"Password: " << this->pass << std::endl;
+
 	struct sockaddr_in options = {};
 
 	int newSockFd;

@@ -22,6 +22,10 @@
 # include <signal.h>
 # include "commands.hpp"
 
+# ifdef __APPLE__
+	# define MSG_NOSIGNAL	0x20000
+# endif
+
 typedef struct user {
 	int socket;
 	std::string nickname;
