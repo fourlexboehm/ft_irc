@@ -1,3 +1,4 @@
+#include <numeric>
 #include "../include/Server.hpp"
 
 /// @param host Host ip address.
@@ -85,7 +86,7 @@ void Server::addClient(int client_socket)
 	user->is_disconnected = false;
 
 	// this->users.insert(client_socket, user);
-	this->users.insert(std::pair<int, user_t *>(client_socket, user));
+	this->users.insert(std::pair<std::string, user_t *>(std::to_string(client_socket), user));
 }
 
 /// @brief Listen the clients.
@@ -99,7 +100,7 @@ void Server::listenClients(char buffer[512])
 	this->readfds = this->activefds;
 	if (select(this->fd_max + 1, &this->readfds, NULL, NULL, NULL) == -1)
 		return;
-	for (std::map<int, user_t *>::iterator it = users.begin(); it != users.end(); ++it)
+	for (std::map<std::string, user_t *>::iterator it = users.begin(); it != users.end(); ++it)
 	{
 		if ((*it).second->is_disconnected)
 		{
@@ -110,15 +111,7 @@ void Server::listenClients(char buffer[512])
 			this->users.erase(it);
 			break;
 		}
-//		{
-//			std::list<user_t *>::iterator it;
-//			for (std::map<int, user_t *>::iterator it = users.begin(); it != users.end(); ++it)
-//			{
-//todo infinate loop here
-//				std::cout << "user: " << (*it).second->nickname << std::endl;
-//			}
-//			std::cout << "--------------------------" << std::endl;
-//		}
+
 		int client_fd = (*it).second->socket;
 		if (FD_ISSET(client_fd, &this->readfds))
 		{

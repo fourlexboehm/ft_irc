@@ -67,16 +67,20 @@ private:
 	fd_set activefds;
 
 	//map of socket fds with user pointers
-	std::map<int, user_t *> users;
+	std::map<std::string , user_t *> users;
 	std::map<std::string, channel_t *> channels;
 
-	static void execNic(user_t *user, const std::string &cmd);
+	void execNic(user_t *user, const std::string &cmd);
 
 	void executeCommand(user_t *user, const std::string& cmd);
 
 	void execUser(user_t *user, const std::string &cmd);
 
 	void parseCommands(user_t *user);
+
+	void joinChannel(user_t *user, const std::string &cmd);
+
+	void forwardMessage(user_t *user, const std::string &cmd);
 };
 
 #endif

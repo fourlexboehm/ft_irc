@@ -11,23 +11,21 @@ void Server::executeCommand(user_t *user, const std::string& cmd)
 		&&cmd.substr(5).substr(0, cmd.find(" " - 1)) == this->pass)
 	{
 			 user->is_authenticated = true;
-			 std::cout << "PASS command" << std::endl;
 	}
 	else if (cmd.find("JOIN ") == 0 && user->is_authenticated)
-	{
-		std::cout << "JOIN command" << std::endl;
-	}
+		this->joinChannel(user, cmd);
 	else if (cmd.find("PRIVMSG ") == 0 && user->is_authenticated)
-	{
-		std::cout << "PRIVMSG command" << std::endl;
-	}
+		this->forwardMessage(user, cmd);
 	else if (cmd.find("QUIT") == 0)
 	{
 		std::cout << "QUIT command" << std::endl;
 	}
 	else if (cmd.find("PING") == 0)
 	{
-		std::cout << "PING command" << std::endl;
+		if (cmd.substr(5) == this->host)
+			this->sendMessageRPL(user, "PONG", cmd.substr(5));
+//		else
+//			this->sendMessageRPL(user, "PONG", "");
 	}
 	else if (cmd.find("PONG") == 0)
 	{
@@ -45,8 +43,59 @@ void Server::execUser(user_t *user, const std::string &cmd)
 	this->sendMessageRPL(user, "001", "Welcome to the Internet Relay Network " + user->nickname + "!");
 }
 
+void Server::joinChannel(user_t *user, const std::string &cmd)
+{
+	std::string channel_name = cmd.substr(5);
+	if (this->channels.find(cmd.substr(5)) == this->channels.end())
+	{
+		channel_t *channel = new channel_t;
+		channel->name = channel_name;
+		channel->connected_users.insert(user->nickname);
+		this->channels[channel_name] = channel;
+	}
+	else
+	{
+
+		channel_t *channel = this->channels[channel_name];
+		channel->connected_users.insert(user->nickname);
+		for (std::set<std::string>::iterator it = channel->connected_users.begin(); it != channel->connected_users.end(); ++it)
+		{
+			if (*it != user->nickname)
+			{
+				this->sendMessageRPL(this->users[*it], "JOIN", user->nickname + " " + channel_name);
+			}
+		}
+
+	}
+}
+void Server::forwardMessage(user_t *user, const std::string &cmd)
+{
+	if (cmd[9] == '#')
+	{
+		channel_t *c = this->channels[cmd.substr(10).substr(0, cmd.find(' ') - 1)];
+		for (std::set<std::string>::iterator it = c->connected_users.begin(); it != c->connected_users.end(); ++it)
+		{
+			user_t *u = this->users.find(*it)->second;
+			if (u->is_authenticated)
+				sendMessageRPL(u, "PRIVMSG", user->nickname + " :" + cmd.substr(cmd.find(':') + 1));
+		}
+	}
+}
+
 void Server::execNic(user_t *user, const std::string &cmd)
-{ user->nickname = cmd.substr(5, cmd.length() - 1); }
+{
+	std::string nickname = cmd.substr(5).substr(0, cmd.find(" " - 1));
+	if (this->users.find(nickname) == this->users.end())
+	{
+		user->nickname = nickname;
+		this->users[nickname] = user;
+		this->users.erase(std::to_string(user->socket));
+	}
+	else
+	{
+		this->sendMessageRPL(user, "433", "Nickname is already in use");
+	}
+}
 
 void Server::parseCommands(user_t *user)
 {
