@@ -23,7 +23,7 @@
 # include "commands.hpp"
 # include "ansi_colours.hpp"
 
-# ifdef __APPLE__
+# ifndef MSG_NOSIGNAL
 	# define MSG_NOSIGNAL	0x20000
 # endif
 
