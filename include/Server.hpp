@@ -67,6 +67,7 @@ private:
 	fd_set activefds;
 
 	//map of socket fds with user pointers
+	std::set<user_t *> pre_nick_users;
 	std::map<std::string , user_t *> users;
 	std::map<std::string, channel_t *> channels;
 
@@ -81,6 +82,8 @@ private:
 	void joinChannel(user_t *user, const std::string &cmd);
 
 	void forwardMessage(user_t *user, const std::string &cmd);
+
+	void handle_client(user_t *it, char *buffer);
 };
 
 #endif

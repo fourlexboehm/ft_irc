@@ -5,7 +5,7 @@
 /// @param port Port to listen.
 /// @param server password
 
-Server::Server(const std::string& host, int port, const std::string& password)
+Server::Server(const std::string &host, int port, const std::string &password)
 {
 	FD_ZERO(&this->readfds);
 	FD_ZERO(&this->activefds);
@@ -84,65 +84,76 @@ void Server::addClient(int client_socket)
 	user->is_registered = false;
 	user->is_banned = false;
 	user->is_disconnected = false;
-
-	// this->users.insert(client_socket, user);
-	this->users.insert(std::pair<std::string, user_t *>(std::to_string(client_socket), user));
+	user->nickname = "";
+	this->pre_nick_users.insert(user);
 }
 
 /// @brief Listen the clients.
 /// Receive a client's command and execute it.
 
+
+
+void Server::handle_client(user_t *it, char buffer[512])
+{
+	size_t len = -1;
+	if (it->is_disconnected)
+	{
+		FD_CLR(it->socket, &this->activefds);
+		close(it->socket);
+		std::cout << it->nickname << " left!" << std::endl;
+		this->users.erase(it->nickname);
+		this->pre_nick_users.erase(it);
+		delete it;
+		return;
+		//todo break!
+	}
+	int client_fd = it->socket;
+	if (FD_ISSET(client_fd, &this->readfds))
+	{
+		len = -1;
+		//todo avoid having to memset the buffer every time
+		memset(buffer, 0, 512);
+		len = recv(client_fd, buffer, 512, MSG_DONTWAIT);
+		if (len == 0)
+			return;
+		else
+		{
+			std::string buff(buffer);
+			std::istringstream buff_stream(buffer);
+			// use separator to read lines of the buffer
+			//todo does this work
+			if (!it->commands.empty())
+				std::getline(buff_stream, it->commands.front(), '\n');
+			for (std::string line; std::getline(buff_stream, line, '\n');)
+				it->commands.push(line);
+			parseCommands(it);
+		}
+	}
+}
+
 void Server::listenClients(char buffer[512])
 {
-//	std::list<user_t *>::iterator it;
-
-	size_t len = -1;
 	this->readfds = this->activefds;
 	if (select(this->fd_max + 1, &this->readfds, NULL, NULL, NULL) == -1)
 		return;
+	for (std::set<user_t *>::iterator it = pre_nick_users.begin(); it != pre_nick_users.end(); ++it)
+	{
+		size_t user_count = pre_nick_users.size();
+		handle_client(*it, buffer);
+		//if the user was deleted, the iterator is invalid
+		if (user_count != pre_nick_users.size())
+			break;
+	}
 	for (std::map<std::string, user_t *>::iterator it = users.begin(); it != users.end(); ++it)
 	{
-		if ((*it).second->is_disconnected)
-		{
-			FD_CLR((*it).second->socket, &this->activefds);
-			close((*it).second->socket);
-			std::cout << (*it).second->nickname << " left!" << std::endl;
-			delete (*it).second;
-			this->users.erase(it);
-			break;
-		}
-
-		int client_fd = (*it).second->socket;
-		if (FD_ISSET(client_fd, &this->readfds))
-		{
-			len = -1;
-			//todo avoid having to memset the buffer every time
-			memset(buffer, 0, 512);
-			len = recv(client_fd, buffer, 512, MSG_DONTWAIT);
-			if (len == 0)
-				return ;
-			else
-			{
-				std::string buff(buffer);
-				std::istringstream buff_stream(buffer);
-				// use separator to read lines of the buffer
-				//todo does this work
-				if (!it->second->commands.empty())
-					std::getline(buff_stream, it->second->commands.front(), '\n');
-				for (std::string line; std::getline(buff_stream, line, '\n');)
-					it->second->commands.push(line);
-				parseCommands(it->second);
-			}
-		}
+		handle_client(it->second, buffer);
 	}
-
 }
 
-void	Server::sendMessageRPL(user_t * user, std::string rpl_code, std::string message)
+void Server::sendMessageRPL(user_t *user, std::string rpl_code, std::string message)
 {
-	std::string	hostname = ":" + this->host;
-	std::string	rpl = hostname + " " + rpl_code + " " + user->nickname + " " + message + "\n";
-
+	std::string hostname = ":" + this->host;
+	std::string rpl = hostname + " " + rpl_code + " " + user->nickname + " " + message + "\n";
 	send(user->socket, rpl.c_str(), rpl.length(), MSG_NOSIGNAL);
 }
 

@@ -39,7 +39,7 @@ void Server::executeCommand(user_t *user, const std::string& cmd)
 
 void Server::execUser(user_t *user, const std::string &cmd)
 {
-	user->username = cmd.substr(5).substr(0, cmd.find(" " - 1));
+	user->username = cmd.substr(5, cmd.find(' ', 5) - 5);
 	this->sendMessageRPL(user, "001", "Welcome to the Internet Relay Network " + user->nickname + "!");
 }
 
@@ -84,12 +84,16 @@ void Server::forwardMessage(user_t *user, const std::string &cmd)
 
 void Server::execNic(user_t *user, const std::string &cmd)
 {
-	std::string nickname = cmd.substr(5).substr(0, cmd.find(" " - 1));
+	std::string nickname = cmd.substr(5, cmd.length() - 6);
 	if (this->users.find(nickname) == this->users.end())
 	{
 		user->nickname = nickname;
 		this->users[nickname] = user;
-		this->users.erase(std::to_string(user->socket));
+		this->pre_nick_users.erase(user);
+	}
+	else if (this->users.find(nickname)->second->socket == user->socket)
+	{
+		return;
 	}
 	else
 	{
