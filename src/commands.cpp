@@ -8,7 +8,7 @@ void Server::executeCommand(user_t *user, const std::string& cmd)
 	else if (cmd.find("USER ") == 0)
 		this->execUser(user, cmd);
 	else if (cmd.find("PASS ") == 0
-		&&cmd.substr(5).substr(0, cmd.find(" " - 1)) == this->pass)
+		&& cmd.substr(5, cmd.length() - 6) == this->pass)
 	{
 			 user->is_authenticated = true;
 	}
@@ -40,13 +40,16 @@ void Server::executeCommand(user_t *user, const std::string& cmd)
 void Server::execUser(user_t *user, const std::string &cmd)
 {
 	user->username = cmd.substr(5, cmd.find(' ', 5) - 5);
-	this->sendMessageRPL(user, "001", "Welcome to the Internet Relay Network " + user->nickname + "!");
+	if (user->is_authenticated)
+		this->sendMessageRPL(user, "001", "Welcome to the Internet Relay Network " + user->nickname + "!");
+	else
+		this->sendMessageRPL(user, "001", "Error, you are not authenticated");
 }
 
 void Server::joinChannel(user_t *user, const std::string &cmd)
 {
-	std::string channel_name = cmd.substr(5);
-	if (this->channels.find(cmd.substr(5)) == this->channels.end())
+	std::string channel_name = cmd.substr(6, cmd.length() - 7);
+	if (this->channels.find(channel_name) == this->channels.end())
 	{
 		channel_t *channel = new channel_t;
 		channel->name = channel_name;
@@ -70,9 +73,9 @@ void Server::joinChannel(user_t *user, const std::string &cmd)
 }
 void Server::forwardMessage(user_t *user, const std::string &cmd)
 {
-	if (cmd[9] == '#')
+	if (cmd[8] == '#')
 	{
-		channel_t *c = this->channels[cmd.substr(10).substr(0, cmd.find(' ') - 1)];
+		channel_t *c = this->channels[cmd.substr(9).substr(0, cmd.find(' ') - 11)];
 		for (std::set<std::string>::iterator it = c->connected_users.begin(); it != c->connected_users.end(); ++it)
 		{
 			user_t *u = this->users.find(*it)->second;
