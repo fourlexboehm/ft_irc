@@ -81,9 +81,11 @@ private:
 
 	void joinChannel(user_t *user, const std::string &cmd);
 
-	void forwardMessage(user_t *user, const std::string &cmd);
-
 	void handle_client(user_t *it, char *buffer);
+
+	void sendChannelMsg(user_t *user, std::string rpl_code, std::string message);
+
+	void forwardMessage(const std::string &cmd);
 };
 
 #endif

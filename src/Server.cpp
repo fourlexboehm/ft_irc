@@ -150,6 +150,13 @@ void Server::listenClients(char buffer[512])
 	}
 }
 
+void Server::sendChannelMsg(user_t *user, std::string rpl_code, std::string message)
+{
+	std::string hostname = ":" + user->nickname + "!" + user->username + "@" + this->host;
+	std::string rpl = hostname + " " + rpl_code + " " + message + "\n";
+	send(user->socket, rpl.c_str(), rpl.length(), MSG_NOSIGNAL);
+}
+
 void Server::sendMessageRPL(user_t *user, std::string rpl_code, std::string message)
 {
 	std::string hostname = ":" + this->host;
