@@ -44,7 +44,6 @@ Server::Server(const std::string &host, int port, const std::string &password)
 
 	// set socket options converting the port to Big Endian
 	options.sin_family = AF_INET;
-	options.sin_addr.s_addr = INADDR_ANY;
 	options.sin_port = htons(this->port);
 	inet_aton(this->host.c_str(), (struct in_addr *) &options.sin_addr.s_addr);
 	if (bind(newSockFd, (struct sockaddr *) &options, sizeof(options)) == -1)
@@ -60,9 +59,7 @@ Server::Server(const std::string &host, int port, const std::string &password)
 		exit(-1);
 	}
 
-	#ifdef __APPLE__
 	fcntl(newSockFd, F_SETFL, O_NONBLOCK);
-	#endif
 	this->sockfd = newSockFd;
 	this->fd_max = newSockFd;
 	FD_SET(newSockFd, &this->activefds);
@@ -116,7 +113,7 @@ void Server::addClient(int client_socket)
 void Server::handle_client(user_t *it, char buffer[512])
 {
 	size_t len = -1;
-	if (it->is_disconnected)
+	if (it != nullptr && it->is_disconnected)
 	{
 		FD_CLR(it->socket, &this->activefds);
 		close(it->socket);
@@ -169,11 +166,11 @@ void Server::listenClients(char buffer[512])
 	}
 }
 
-void Server::sendChannelMsg(user_t *user, std::string rpl_code, std::string message)
+void Server::sendChannelMsg(user_t *sender, user_t *receiver, std::string rpl_code, std::string message)
 {
-	std::string hostname = ":" + user->nickname + "!" + user->username + "@" + this->host;
+	std::string hostname = ":" + sender->nickname + "!" + sender->username + "@" + this->host;
 	std::string rpl = hostname + " " + rpl_code + " " + message + "\n";
-	send(user->socket, rpl.c_str(), rpl.length(), MSG_NOSIGNAL);
+	send(receiver->socket, rpl.c_str(), rpl.length(), MSG_NOSIGNAL);
 }
 
 void Server::sendMessageRPL(user_t *user, std::string rpl_code, std::string message)

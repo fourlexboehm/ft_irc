@@ -19,7 +19,7 @@ all:		${NAME}
 test: all
 	./ircserv 6667 "1"
 
-clien1: all
+client1: all
 	./client/sic -h localhost -p 6667 -n client1 -k 1
 	
 client2: all

@@ -14,7 +14,7 @@ void Server::executeCommand(user_t *user, const std::string &cmd)
 	} else if (cmd.find("JOIN ") == 0 && user->is_authenticated)
 		this->joinChannel(user, cmd);
 	else if (cmd.find("PRIVMSG ") == 0 && user->is_authenticated)
-		this->forwardMessage(cmd);
+		this->forwardMessage(cmd, user);
 	else if (cmd.find("QUIT") == 0)
 	{
 		std::cout << "QUIT command" << std::endl;
@@ -44,6 +44,8 @@ void Server::execUser(user_t *user, const std::string &cmd)
 
 void Server::joinChannel(user_t *user, const std::string &cmd)
 {
+	if (cmd.find('#') != 5)
+		return;
 	std::string channel_name = cmd.substr(6, cmd.length() - 7);
 	if (this->channels.find(channel_name) == this->channels.end())
 	{
@@ -60,25 +62,32 @@ void Server::joinChannel(user_t *user, const std::string &cmd)
 		{
 			if (*it != user->nickname)
 			{
-				this->sendChannelMsg(this->users[*it], "JOIN", user->nickname + " " + channel_name);
+				this->sendChannelMsg(user, this->users[*it], "JOIN", user->nickname + " " + channel_name);
 			}
 		}
 	}
 }
 
-void Server::forwardMessage(const std::string &cmd)
+void Server::forwardMessage(const std::string &cmd, user_t *sender)
 {
 	if (cmd[8] == '#')
 	{
 		std::string chan = cmd.substr(9, cmd.find(':') - 10);
 		channel_t *c = this->channels[chan];
-		if (c == NULL) return;
+		if (c == nullptr) return;
 		for (std::set<std::string>::iterator it = c->connected_users.begin(); it != c->connected_users.end(); ++it)
 		{
 			user_t *u = this->users.find(*it)->second;
-			if (u->is_authenticated)
-				sendChannelMsg(u, "PRIVMSG", "#" + chan + " :" + cmd.substr(cmd.find(':') + 1));
+			if (u->is_authenticated && u->nickname != sender->nickname)
+				sendChannelMsg(sender, u, "PRIVMSG", "#" + chan + " :" + cmd.substr(cmd.find(':') + 1));
 		}
+	}
+	else
+	{
+		std::string user = cmd.substr(8, cmd.find(':') - 9);
+		user_t *u = this->users[user];
+		if (u != nullptr && u->is_authenticated && u != sender)
+			sendChannelMsg(sender, u, "", cmd);
 	}
 }
 
