@@ -84,7 +84,7 @@ void Server::partMessage(const std::string &cmd, user_t *sender)
 		{
 			if (*it != sender->nickname)
 			{
-				this->sendChannelMsg(sender, this->users[*it], "PART", sender->nickname + " " + channel_name);
+				this->sendChannelMsg(sender, this->users[*it], "", cmd);
 			}
 		}
 	}
@@ -92,29 +92,43 @@ void Server::partMessage(const std::string &cmd, user_t *sender)
 
 void Server::forwardMessage(const std::string &cmd, user_t *sender)
 {
+	if (cmd.find(':') == std::string::npos)
+	{
+		return ;
+	}
 	if (cmd[8] == '#')
 	{
 		std::string chan = cmd.substr(9, cmd.find(':') - 10);
 		channel_t *c = this->channels[chan];
-		if (c == nullptr) return;
+		if (c == nullptr) 
+			return;
+		std::cout << "Users in channel: " << std::endl;
 		for (std::set<std::string>::iterator it = c->connected_users.begin(); it != c->connected_users.end(); ++it)
 		{
 			user_t *u = this->users.find(*it)->second;
-			if (u->is_authenticated && u->nickname != sender->nickname)
+			//todo remove users who have left
+			if (u && u->is_authenticated && u->nickname != sender->nickname)
 				sendChannelMsg(sender, u, "PRIVMSG", "#" + chan + " :" + cmd.substr(cmd.find(':') + 1));
+			else
+				std::cout << "Client sending message: " << u->nickname << std::endl;
 		}
-	} else
+		std::cout << std::endl;
+	}
+	else
 	{
 		std::string user = cmd.substr(8, cmd.find(':') - 9);
 		user_t *u = this->users[user];
 		if (u != nullptr && u->is_authenticated && u != sender)
 			sendChannelMsg(sender, u, "", cmd);
+		else
+			std::cout << "Client sending message: " << u->nickname << std::endl;
 	}
 }
 
 void Server::execNic(user_t *user, const std::string &cmd)
 {
 	std::string nickname = cmd.substr(5, cmd.length() - 6);
+	std::cout << user->nickname;
 	if (this->users.find(nickname) == this->users.end())
 	{
 		user->nickname = nickname;
@@ -127,6 +141,8 @@ void Server::execNic(user_t *user, const std::string &cmd)
 	{
 		this->sendMessageRPL(user, "433", "Nickname is already in use");
 	}
+	std::cout << " is now called ";
+	std::cout << user->nickname << std::endl;
 }
 
 void Server::parseCommands(user_t *user)

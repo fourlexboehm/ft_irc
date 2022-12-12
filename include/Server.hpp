@@ -87,7 +87,6 @@ private:
 
 	void handle_client(user_t *it, char *buffer);
 
-
 	void forwardMessage(const std::string &cmd);
 
 	void sendChannelMsg(user_t *sender, user_t *receiver, std::string rpl_code, std::string message);
