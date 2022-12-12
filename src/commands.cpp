@@ -100,7 +100,7 @@ void Server::forwardMessage(const std::string &cmd, user_t *sender)
 	{
 		std::string chan = cmd.substr(9, cmd.find(':') - 10);
 		channel_t *c = this->channels[chan];
-		if (c == nullptr) 
+		if (c == NULL)
 			return;
 		std::cout << "Users in channel: " << std::endl;
 		for (std::set<std::string>::iterator it = c->connected_users.begin(); it != c->connected_users.end(); ++it)
@@ -118,7 +118,7 @@ void Server::forwardMessage(const std::string &cmd, user_t *sender)
 	{
 		std::string user = cmd.substr(8, cmd.find(':') - 9);
 		user_t *u = this->users[user];
-		if (u != nullptr && u->is_authenticated && u != sender)
+		if (u != NULL && u->is_authenticated && u != sender)
 			sendChannelMsg(sender, u, "", cmd);
 		else
 			std::cout << "Client sending message: " << u->nickname << std::endl;
