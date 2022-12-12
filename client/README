@@ -1,20 +1,23 @@
-IRC client                              https://c9x.me/irc/
-===========================================================
+sic - simple irc client
+=======================
+sic is an extremely fast, small and simple irc client.  It reads commands from
+standard input and prints all server output to standard output. It multiplexes
+also all channel traffic into one output so that you don't have to switch
+different channel buffers: that's actually a feature.
 
-This is a simple irc client, it requires the ncurses
-library to compile.
 
-Usage: irc [OPTIONS]
+Installation
+------------
+Edit the Makefile or override the flags to match your local setup. sic is
+installed into /usr/local by default.
 
-     OPTION                                DEFAULT
+Afterwards enter the following command to build and install sic 
+(if necessary as root):
 
-    -n NICK     Sets the nick              $IRCNICK
-    -u USER     Sets the username          $USER
-    -s SERVER   Server to connect to       irc.oftc.net 
-    -p PORT     Port to connect to         6667
-    -l FILE     File to log recieved data 
-    -t          Use a secured connection
-    -h          Display help
+	$ make
+	# make install
 
-A password sent to the server can be specified by setting
-the environment variable $IRCPASS.
+
+Running sic
+-----------
+Simply invoke the 'sic' command with the required arguments.

@@ -1,21 +1,59 @@
-BIN = irc
+.POSIX:
 
-CFLAGS = -std=c99 -Os -D_POSIX_C_SOURCE=201112 -D_GNU_SOURCE -D_XOPEN_CURSES -D_XOPEN_SOURCE_EXTENDED=1 -D_DEFAULT_SOURCE -D_BSD_SOURCE
-LDFLAGS = -lncursesw -lssl -lcrypto
+NAME = sic
+VERSION = 1.3
 
-PREFIX=/usr/local
+# paths
+PREFIX = /usr/local
+MANPREFIX = ${PREFIX}/share/man
+
+# use system flags.
+SIC_CFLAGS = ${CFLAGS}
+SIC_LDFLAGS = ${LDFLAGS}
+SIC_CPPFLAGS = ${LDFLAGS} -DVERSION=\"${VERSION}\" -D_GNU_SOURCE
+
+BIN = sic
+SRC = ${BIN:=.c}
+OBJ = ${SRC:.c=.o}
+MAN1 = ${BIN:=.1}
 
 all: ${BIN}
 
-install: ${BIN}
-	mkdir -p ${PREFIX}/bin
-	cp -f ${BIN} ${PREFIX}/bin
-	chmod 755 ${PREFIX}/bin/${BIN}
+${BIN}: ${@:=.o}
 
-uninstall:
-	rm -f ${PREFIX}/bin/${BIN}
+${OBJ}: config.h strlcpy.c util.c
+
+.o:
+	${CC} -o $@ $< ${SIC_LDFLAGS}
+
+.c.o:
+	${CC} -c ${SIC_CFLAGS} ${SIC_CPPFLAGS} -o $@ -c $<
+
+config.h:
+	cp config.def.h $@
 
 clean:
-	rm -f ${BIN} *.o
+	rm -f ${BIN} ${OBJ} "${NAME}-${VERSION}.tar.gz"
 
-.PHONY: all clean
+dist:
+	mkdir -p "${NAME}-${VERSION}"
+	cp -fR LICENSE Makefile README arg.h config.def.h \
+		${MAN1} ${SRC} util.c strlcpy.c "${NAME}-${VERSION}"
+	tar -cf - "${NAME}-${VERSION}" | \
+		gzip -c > "${NAME}-${VERSION}.tar.gz"
+	rm -rf "${NAME}-${VERSION}"
+
+install: all
+	mkdir -p ${DESTDIR}${PREFIX}/bin
+	cp -f ${BIN} "${DESTDIR}${PREFIX}/bin"
+	chmod 755 "${DESTDIR}${PREFIX}/bin/${BIN}"
+	mkdir -p "${DESTDIR}${MANPREFIX}/man1"
+	sed "s/VERSION/${VERSION}/g" < ${MAN1} > "${DESTDIR}${MANPREFIX}/man1/${MAN1}"
+	chmod 644 "${DESTDIR}${MANPREFIX}/man1/${MAN1}"
+
+uninstall:
+	rm -f \
+		"${DESTDIR}${PREFIX}/bin/${BIN}"\
+		"${DESTDIR}${MANPREFIX}/man1/${MAN1}"
+
+.PHONY: all clean dist install uninstall
