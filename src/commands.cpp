@@ -3,10 +3,7 @@
 void Server::executeCommand(user_t *user, const std::string &cmd)
 {
 	std::cout << "executing command: " << cmd << std::endl;
-	if (cmd.find("CAP LS")) {
-		//todo impl
-	}
-	else if (cmd.find("NICK ") == 0)
+	if (cmd.find("NICK ") == 0)
 		Server::execNic(user, cmd);
 	else if (cmd.find("USER ") == 0)
 		this->execUser(user, cmd);
@@ -109,7 +106,7 @@ void Server::parseCommands(user_t *user)
 		std::string cmd = user->commands.front();
 		//todo cr or nl?
 		if (cmd[cmd.size() - 1] != '\r')
-			//this message wasn't complete so we'll handle it later
+			//this message wasn't complete, so we'll handle it later
 			return;
 		executeCommand(user, cmd);
 		user->commands.pop();
