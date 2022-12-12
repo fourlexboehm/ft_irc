@@ -59,7 +59,10 @@ Server::Server(const std::string &host, int port, const std::string &password)
 		close(newSockFd);
 		exit(-1);
 	}
+
+	#ifdef __APPLE__
 	fcntl(newSockFd, F_SETFL, O_NONBLOCK);
+	#endif
 	this->sockfd = newSockFd;
 	this->fd_max = newSockFd;
 	FD_SET(newSockFd, &this->activefds);

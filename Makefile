@@ -19,6 +19,9 @@ all:		${NAME}
 test: all
 	./ircserv 6667 "1"
 
+client: all
+	./client/sic -h localhost -p 6667 -n name -k 1
+
 bonus:		all
 
 clean:
