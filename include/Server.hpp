@@ -42,7 +42,7 @@ typedef struct user {
 typedef struct channel {
 	std::string name;
 	std::set<std::string> connected_users;
-	std::set<std::string> operators;
+//	std::set<std::string> operators;
 } channel_t;
 
 class Server {

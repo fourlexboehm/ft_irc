@@ -73,7 +73,7 @@ void Server::partMessage(const std::string &cmd, user_t *sender)
 	if (cmd[5] != '#')
 		return;
 	std::string channel_name = cmd.substr(6, cmd.find(':') - 7);
-	if (this->channels[channel_name] == nullptr)
+	if (this->channels[channel_name] == NULL)
 		return;
 	else
 	{
