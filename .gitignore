@@ -3,6 +3,7 @@
 *.idea
 irc
 ircserv
+sic
 
 # Compiled Object files
 *.slo
