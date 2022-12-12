@@ -84,7 +84,7 @@ void Server::partMessage(const std::string &cmd, user_t *sender)
 		{
 			if (*it != sender->nickname)
 			{
-				this->sendChannelMsg(sender, this->users[*it], "PART", sender->nickname + " " + channel_name);
+				this->sendChannelMsg(sender, this->users[*it], "", cmd);
 			}
 		}
 	}
