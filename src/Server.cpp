@@ -113,7 +113,9 @@ void Server::addClient(int client_socket)
 void Server::handle_client(user_t *it, char buffer[512])
 {
 	size_t len = -1;
-	if (it != nullptr && it->is_disconnected)
+	if (it == nullptr)
+		return;
+	if (it->is_disconnected)
 	{
 		FD_CLR(it->socket, &this->activefds);
 		close(it->socket);

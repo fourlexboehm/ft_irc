@@ -37,7 +37,6 @@ typedef struct user {
 	bool is_registered;
 	bool is_banned;
 	bool is_authenticated;
-	std::map<std::string, struct channel *> channels;
 } user_t;
 
 typedef struct channel {
@@ -94,6 +93,8 @@ private:
 	void sendChannelMsg(user_t *sender, user_t *receiver, std::string rpl_code, std::string message);
 
 	void forwardMessage(const std::string &cmd, user_t *sender);
+
+	void partMessage(const std::string &cmd, user_t *sender);
 };
 
 #endif

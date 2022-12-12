@@ -7,17 +7,17 @@ void Server::executeCommand(user_t *user, const std::string &cmd)
 		Server::execNic(user, cmd);
 	else if (cmd.find("USER ") == 0)
 		this->execUser(user, cmd);
-	else if (cmd.find("PASS ") == 0
-			 && cmd.substr(5, cmd.length() - 6) == this->pass)
-	{
+	else if (cmd.find("PASS ") == 0 && cmd.substr(5, cmd.length() - 6) == this->pass)
 		user->is_authenticated = true;
-	} else if (cmd.find("JOIN ") == 0 && user->is_authenticated)
+	else if (cmd.find("JOIN ") == 0 && user->is_authenticated)
 		this->joinChannel(user, cmd);
 	else if (cmd.find("PRIVMSG ") == 0 && user->is_authenticated)
 		this->forwardMessage(cmd, user);
+	else if (cmd.find("PART") == 0)
+		this->partMessage(cmd, user);
 	else if (cmd.find("QUIT") == 0)
 	{
-		std::cout << "QUIT command" << std::endl;
+
 	} else if (cmd.find("PING") == 0)
 	{
 		if (cmd.substr(5) == this->host)
@@ -68,6 +68,28 @@ void Server::joinChannel(user_t *user, const std::string &cmd)
 	}
 }
 
+void Server::partMessage(const std::string &cmd, user_t *sender)
+{
+	if (cmd[5] != '#')
+		return;
+	std::string channel_name = cmd.substr(6, cmd.find(':') - 7);
+	if (this->channels[channel_name] == nullptr)
+		return;
+	else
+	{
+		channel_t *channel = this->channels[channel_name];
+		channel->connected_users.erase(sender->nickname);
+		for (std::set<std::string>::iterator it = channel->connected_users.begin();
+			 it != channel->connected_users.end(); ++it)
+		{
+			if (*it != sender->nickname)
+			{
+				this->sendChannelMsg(sender, this->users[*it], "PART", sender->nickname + " " + channel_name);
+			}
+		}
+	}
+}
+
 void Server::forwardMessage(const std::string &cmd, user_t *sender)
 {
 	if (cmd[8] == '#')
@@ -81,8 +103,7 @@ void Server::forwardMessage(const std::string &cmd, user_t *sender)
 			if (u->is_authenticated && u->nickname != sender->nickname)
 				sendChannelMsg(sender, u, "PRIVMSG", "#" + chan + " :" + cmd.substr(cmd.find(':') + 1));
 		}
-	}
-	else
+	} else
 	{
 		std::string user = cmd.substr(8, cmd.find(':') - 9);
 		user_t *u = this->users[user];
