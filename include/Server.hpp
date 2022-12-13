@@ -37,12 +37,17 @@ typedef struct user {
 	bool is_registered;
 	bool is_banned;
 	bool is_authenticated;
+	std::map<std::string, struct channel *> channels;
 } user_t;
+
+typedef struct channel_user {
+	user_t *user;
+	bool is_op;
+} channel_user_t;
 
 typedef struct channel {
 	std::string name;
-	std::set<std::string> connected_users;
-//	std::set<std::string> operators;
+	std::map<std::string, channel_user_t *> users;
 } channel_t;
 
 class Server {

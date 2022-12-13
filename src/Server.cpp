@@ -120,6 +120,21 @@ void Server::handle_client(user_t *it, char buffer[512])
 		FD_CLR(it->socket, &this->activefds);
 		close(it->socket);
 		std::cout << it->nickname << " left!" << std::endl;
+		for (std::map<std::string, channel_t *>::iterator it2 = this->channels.begin(); it2 != this->channels.end(); it2++)
+		{
+			if (it2->second->users.find(it->nickname) != it2->second->users.end())
+			{
+				channel_user_t *user = it2->second->users[it->nickname];
+				delete user;
+				it2->second->users.erase(it->nickname);
+				//todo delete channel?
+//				if (it2->second.users.size() == 0)
+//				{
+//					this->channels.erase(it2->first);
+//					std::cout << "Channel " << it2->first << " deleted." << std::endl;
+//				}
+			}
+		}
 		this->users.erase(it->nickname);
 		this->pre_nick_users.erase(it);
 		delete it;
@@ -139,7 +154,6 @@ void Server::handle_client(user_t *it, char buffer[512])
 			std::string buff(buffer);
 			std::istringstream buff_stream(buffer);
 			// use separator to read lines of the buffer
-			//todo does this work
 			if (!it->commands.empty())
 				std::getline(buff_stream, it->commands.front(), '\n');
 			for (std::string line; std::getline(buff_stream, line, '\n');)
