@@ -51,18 +51,26 @@ void Server::joinChannel(user_t *user, const std::string &cmd)
 	{
 		channel_t *channel = new channel_t;
 		channel->name = channel_name;
-		channel->connected_users.insert(user->nickname);
+		channel_user_t *channel_user = new channel_user_t;
+		channel_user->is_op = true;
+		channel_user->user = user;
+		channel->users.insert(std::pair<std::string, channel_user_t *>(user->nickname, channel_user));
+		user->channels.insert(std::pair<std::string, channel_t *>(channel_name, channel));
 		this->channels[channel_name] = channel;
 	} else
 	{
+		channel_user_t *channel_user = new channel_user_t;
+		channel_user->is_op = false;
+		channel_user->user = user;
 		channel_t *channel = this->channels[channel_name];
-		channel->connected_users.insert(user->nickname);
-		for (std::set<std::string>::iterator it = channel->connected_users.begin();
-			 it != channel->connected_users.end(); ++it)
+		channel->users.insert(std::pair<std::string, channel_user_t *>(user->nickname, channel_user));
+		user->channels.insert(std::pair<std::string, channel_t *>(channel_name, channel));
+		for (std::map<std::string, channel_user_t *>::iterator it = channel->users.begin();
+			 it != channel->users.end(); ++it)
 		{
-			if (*it != user->nickname)
+			if (it->first != user->nickname)
 			{
-				this->sendChannelMsg(user, this->users[*it], "JOIN", user->nickname + " " + channel_name);
+				this->sendChannelMsg(user, it->second->user, "JOIN", user->nickname + " " + channel_name);
 			}
 		}
 	}
@@ -78,13 +86,16 @@ void Server::partMessage(const std::string &cmd, user_t *sender)
 	else
 	{
 		channel_t *channel = this->channels[channel_name];
-		channel->connected_users.erase(sender->nickname);
-		for (std::set<std::string>::iterator it = channel->connected_users.begin();
-			 it != channel->connected_users.end(); ++it)
+		channel_user_t *channel_user = channel->users[sender->nickname];
+		channel->users.erase(sender->nickname);
+		delete channel_user;
+		sender->channels.erase(channel_name);
+		for (std::map<std::string, channel_user_t *>::iterator it = channel->users.begin();
+			 it != channel->users.end(); ++it)
 		{
-			if (*it != sender->nickname)
+			if (it->first != sender->nickname)
 			{
-				this->sendChannelMsg(sender, this->users[*it], "", cmd);
+				this->sendChannelMsg(sender, it->second->user, "", cmd);
 			}
 		}
 	}
@@ -103,14 +114,12 @@ void Server::forwardMessage(const std::string &cmd, user_t *sender)
 		if (c == NULL)
 			return;
 		std::cout << "Users in channel: " << std::endl;
-		for (std::set<std::string>::iterator it = c->connected_users.begin(); it != c->connected_users.end(); ++it)
+		for (std::map<std::string, channel_user_t *>::iterator it = c->users.begin(); it != c->users.end(); ++it)
 		{
-			user_t *u = this->users.find(*it)->second;
-			//todo remove users who have left
-			if (u && u->is_authenticated && u->nickname != sender->nickname)
-				sendChannelMsg(sender, u, "PRIVMSG", "#" + chan + " :" + cmd.substr(cmd.find(':') + 1));
+			if (it->second->user->is_authenticated && it->first != sender->nickname)
+				sendChannelMsg(sender, it->second->user, "PRIVMSG", "#" + chan + " :" + cmd.substr(cmd.find(':') + 1));
 			else
-				std::cout << "Client sending message: " << u->nickname << std::endl;
+				std::cout << "Client sending message: " << it->second->user->nickname << std::endl;
 		}
 		std::cout << std::endl;
 	}
@@ -118,7 +127,7 @@ void Server::forwardMessage(const std::string &cmd, user_t *sender)
 	{
 		std::string user = cmd.substr(8, cmd.find(':') - 9);
 		user_t *u = this->users[user];
-		if (u != NULL && u->is_authenticated && u != sender)
+		if (u && u->is_authenticated && u != sender)
 			sendChannelMsg(sender, u, "", cmd);
 		else
 			std::cout << "Client sending message: " << u->nickname << std::endl;
@@ -150,7 +159,6 @@ void Server::parseCommands(user_t *user)
 	while (!user->commands.empty())
 	{
 		std::string cmd = user->commands.front();
-		//todo cr or nl?
 		if (cmd[cmd.size() - 1] != '\r')
 			//this message wasn't complete, so we'll handle it later
 			return;
