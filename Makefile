@@ -19,10 +19,14 @@ all:		${NAME}
 test: all
 	./ircserv 6667 "1"
 
-client1: all
+client1:
+	echo "Hello"
+	$(MAKE) -C ./client
+	echo "World"
 	./client/sic -h localhost -p 6667 -n client1 -k 1
 	
 client2: all
+	${MAKE} -C ./client
 	./client/sic -h localhost -p 6667 -n client2 -k 1
 
 bonus:		all
