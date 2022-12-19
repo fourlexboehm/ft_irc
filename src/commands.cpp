@@ -15,9 +15,10 @@ void Server::executeCommand(user_t *user, const std::string &cmd)
 		this->forwardMessage(cmd, user);
 	else if (cmd.find("PART") == 0)
 		this->partMessage(cmd, user);
+	else if (cmd.find("KICK") == 0)
+		this->kickUser(cmd, user);
 	else if (cmd.find("QUIT") == 0)
 	{
-
 	} else if (cmd.find("PING") == 0)
 	{
 		if (cmd.substr(5) == this->host)
@@ -42,6 +43,41 @@ void Server::execUser(user_t *user, const std::string &cmd)
 		this->sendMessageRPL(user, "427", "Error, you are not authenticated");
 }
 
+//operator commands
+void Server::kickUser(const std::string &cmd, user_t *user)
+{
+	std::string channel_name = cmd.substr(6, cmd.find(' ', 5) - 6);
+	std::string user_to_kick = cmd.substr(cmd.find(' ', 5) + 1,
+										  cmd.find(' ', cmd.find(' ', 5) + 1) - cmd.find(' ', 5) - 1);
+
+	std::string reason = cmd.substr(cmd.find(':') + 1);
+	if (cmd.find(':') == std::string::npos)
+		reason = "No reason";
+	channel_t *channel = this->channels[channel_name];
+	if (!channel)
+	{
+		this->sendMessageRPL(user, "403", "No such channel");
+		return;
+	}
+	channel_user_t *kickee = channel->users[user_to_kick];
+	channel_user_t *kicker = channel->users[user->nickname];
+	if (!kickee || !kicker)
+	{
+		this->sendMessageRPL(user, "441", "They aren't on that channel");
+		return;
+	}
+	if (kickee->is_op || !kicker->is_op)
+	{
+		this->sendMessageRPL(user, "482", "You are not a channel operator");
+		return;
+	}
+
+	partMessage("PART #" + channel_name + " :"  +  kickee->user->nickname + " Kicked For "+ reason, kickee->user);
+	return;
+}
+
+//void Server::make
+
 void Server::joinChannel(user_t *user, const std::string &cmd)
 {
 	if (cmd.find('#') != 5)
@@ -63,6 +99,7 @@ void Server::joinChannel(user_t *user, const std::string &cmd)
 		channel_user->is_op = false;
 		channel_user->user = user;
 		channel_t *channel = this->channels[channel_name];
+		assert(channel);
 		channel->users.insert(std::pair<std::string, channel_user_t *>(user->nickname, channel_user));
 		user->channels.insert(std::pair<std::string, channel_t *>(channel_name, channel));
 		for (std::map<std::string, channel_user_t *>::iterator it = channel->users.begin();
@@ -81,6 +118,9 @@ void Server::partMessage(const std::string &cmd, user_t *sender)
 	if (cmd[5] != '#')
 		return;
 	std::string channel_name = cmd.substr(6, cmd.find(':') - 7);
+	if (cmd.find(':') == std::string::npos) {
+		channel_name = cmd.substr(6, cmd.length() - 7);
+	}
 	if (this->channels[channel_name] == NULL)
 		return;
 	else
@@ -105,7 +145,7 @@ void Server::forwardMessage(const std::string &cmd, user_t *sender)
 {
 	if (cmd.find(':') == std::string::npos)
 	{
-		return ;
+		return;
 	}
 	if (cmd[8] == '#')
 	{
@@ -116,21 +156,18 @@ void Server::forwardMessage(const std::string &cmd, user_t *sender)
 		std::cout << "Users in channel: " << std::endl;
 		for (std::map<std::string, channel_user_t *>::iterator it = c->users.begin(); it != c->users.end(); ++it)
 		{
-			if (it->second->user->is_authenticated && it->first != sender->nickname)
+			if (it->second->user->is_authenticated && it->first != sender->nickname && c->users[sender->nickname])
 				sendChannelMsg(sender, it->second->user, "PRIVMSG", "#" + chan + " :" + cmd.substr(cmd.find(':') + 1));
-			else
-				std::cout << "Client sending message: " << it->second->user->nickname << std::endl;
 		}
 		std::cout << std::endl;
-	}
-	else
+	} else
 	{
 		std::string user = cmd.substr(8, cmd.find(':') - 9);
 		user_t *u = this->users[user];
 		if (u && u->is_authenticated && u != sender)
 			sendChannelMsg(sender, u, "", cmd);
 		else
-			std::cout << "Client sending message: " << u->nickname << std::endl;
+			sendMessageRPL(sender, "404", "User not found");
 	}
 }
 
