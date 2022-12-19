@@ -99,7 +99,6 @@ void Server::joinChannel(user_t *user, const std::string &cmd)
 		channel_user->is_op = false;
 		channel_user->user = user;
 		channel_t *channel = this->channels[channel_name];
-		assert(channel);
 		channel->users.insert(std::pair<std::string, channel_user_t *>(user->nickname, channel_user));
 		user->channels.insert(std::pair<std::string, channel_t *>(channel_name, channel));
 		for (std::map<std::string, channel_user_t *>::iterator it = channel->users.begin();
@@ -154,7 +153,7 @@ void Server::forwardMessage(const std::string &cmd, user_t *sender)
 		if (c == NULL)
 			return;
 		std::cout << "Users in channel: " << std::endl;
-		for (std::map<std::string, channel_user_t *>::iterator it = c->users.begin(); it != c->users.end(); ++it)
+		for (std::map<std::string, channel_user_t *>::iterator it = c->users.begin(); it != c->users.end(); it++)
 		{
 			if (it->second->user->is_authenticated && it->first != sender->nickname && c->users[sender->nickname])
 				sendChannelMsg(sender, it->second->user, "PRIVMSG", "#" + chan + " :" + cmd.substr(cmd.find(':') + 1));
