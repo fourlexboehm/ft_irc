@@ -99,6 +99,8 @@ private:
 	void forwardMessage(const std::string &cmd, user_t *sender);
 
 	void partMessage(const std::string &cmd, user_t *sender);
+
+	void kickUser(const std::string &cmd, user_t *user);
 };
 
 #endif
