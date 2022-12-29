@@ -2,9 +2,12 @@
 
 void Server::executeCommand(user_t *user, const std::string &cmd)
 {
-	std::cout << "executing command: " << cmd << std::endl;
+	std::cout << "executing command:" << std::endl <<
+	UGRN << cmd << CRESET << std::endl;
 	if (cmd.find("NICK ") == 0)
+	{
 		Server::execNic(user, cmd);
+	}
 	else if (cmd.find("USER ") == 0)
 		this->execUser(user, cmd);
 	else if (cmd.find("PASS ") == 0 && cmd.substr(5, cmd.length() - 6) == this->pass)
@@ -80,8 +83,10 @@ void Server::kickUser(const std::string &cmd, user_t *user)
 
 void Server::joinChannel(user_t *user, const std::string &cmd)
 {
-	if (cmd.find('#') != 5)
+	if (cmd.find('#') != 5 || user->socket == 0)
 		return;
+	user_t	bot = get_user(0);
+	std::cout << "Creating new Channel" << std::endl;
 	std::string channel_name = cmd.substr(6, cmd.length() - 7);
 	if (this->channels.find(channel_name) == this->channels.end())
 	{
@@ -93,6 +98,7 @@ void Server::joinChannel(user_t *user, const std::string &cmd)
 		channel->users.insert(std::pair<std::string, channel_user_t *>(user->nickname, channel_user));
 		user->channels.insert(std::pair<std::string, channel_t *>(channel_name, channel));
 		this->channels[channel_name] = channel;
+		std::cout << "New Channel Created: " << channel_name << std::endl;
 	} else
 	{
 		channel_user_t *channel_user = new channel_user_t;
@@ -109,7 +115,10 @@ void Server::joinChannel(user_t *user, const std::string &cmd)
 				this->sendChannelMsg(user, it->second->user, "JOIN", user->nickname + " " + channel_name);
 			}
 		}
+		std::cout << user->nickname << " Joined Channel: " << channel_name << std::endl;
 	}
+	this->executeCommand(&bot, "JOIN #" + channel_name);
+	this->executeCommand(&bot, "PRIVMSG #" + channel_name + " :You Have Created A New Channel! It is called " + channel_name);
 }
 
 void Server::partMessage(const std::string &cmd, user_t *sender)
@@ -146,6 +155,7 @@ void Server::forwardMessage(const std::string &cmd, user_t *sender)
 	{
 		return;
 	}
+	std::cout << cmd << std::endl;
 	if (cmd[8] == '#')
 	{
 		std::string chan = cmd.substr(9, cmd.find(':') - 10);
@@ -155,9 +165,15 @@ void Server::forwardMessage(const std::string &cmd, user_t *sender)
 		std::cout << "Users in channel: " << std::endl;
 		for (std::map<std::string, channel_user_t *>::iterator it = c->users.begin(); it != c->users.end(); it++)
 		{
+			std::cout << "*****************" << std::endl;
+			std::cout << c->users[sender->nickname] << std::endl;
+			std::cout << it->first << std::endl;
+			std::cout << it->second->user->is_authenticated << std::endl;
+			std::cout << "*****************" << std::endl;
 			if (it->second->user->is_authenticated && it->first != sender->nickname && c->users[sender->nickname])
 				sendChannelMsg(sender, it->second->user, "PRIVMSG", "#" + chan + " :" + cmd.substr(cmd.find(':') + 1));
 		}
+		std::cout << "End of list." << std::endl;
 		std::cout << std::endl;
 	} else
 	{

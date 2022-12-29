@@ -62,6 +62,14 @@ public:
 
 	void sendMessageRPL(user_t *user, std::string rpl_code, std::string message);
 
+	const user_t	&get_pre_nick_user( int socket );
+
+	const user_t	&get_user( int socket );
+
+	void executeCommand(user_t *user, const std::string& cmd); //fix this up later, make protected and create bot class to extend server class
+
+	void sendChannelMsg(user_t *sender, user_t *receiver, std::string rpl_code, std::string message);
+
 private:
 	int sockfd;
 	std::string host;
@@ -82,8 +90,6 @@ private:
 
 	void execNic(user_t *user, const std::string &cmd);
 
-	void executeCommand(user_t *user, const std::string& cmd);
-
 	void execUser(user_t *user, const std::string &cmd);
 
 	void parseCommands(user_t *user);
@@ -94,13 +100,13 @@ private:
 
 	void forwardMessage(const std::string &cmd);
 
-	void sendChannelMsg(user_t *sender, user_t *receiver, std::string rpl_code, std::string message);
-
 	void forwardMessage(const std::string &cmd, user_t *sender);
 
 	void partMessage(const std::string &cmd, user_t *sender);
 
 	void kickUser(const std::string &cmd, user_t *user);
 };
+
+void	init_bot(Server &server);
 
 #endif

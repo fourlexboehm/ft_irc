@@ -105,6 +105,8 @@ void Server::addClient(int client_socket)
 	this->pre_nick_users.insert(user);
 }
 
+
+
 /// @brief Listen the clients.
 /// Receive a client's command and execute it.
 
@@ -125,6 +127,7 @@ void Server::handle_client(user_t *it, char buffer[512])
 			if (it2->second->users.find(it->nickname) != it2->second->users.end())
 			{
 				channel_user_t *user = it2->second->users[it->nickname];
+				std::cout << it->nickname << " Left Channel: " << std::endl;
 				delete user;
 				it2->second->users.erase(it->nickname);
 				//todo delete channel?
@@ -197,3 +200,30 @@ void Server::sendMessageRPL(user_t *user, std::string rpl_code, std::string mess
 	send(user->socket, rpl.c_str(), rpl.length(), MSG_NOSIGNAL);
 }
 
+const user_t	&Server::get_pre_nick_user( int socket ) {
+	user_t *tmp;
+	for (std::set<user_t *>::iterator it = pre_nick_users.begin(); it != pre_nick_users.end(); ++it)
+	{
+		tmp = *it;
+		if (tmp->socket == socket)
+			return (*tmp);
+	}
+	tmp = NULL;
+	return (*tmp);
+}
+
+const user_t	&Server::get_user( int socket ) {
+	user_t *tmp;
+	for (std::map<std::string, user_t *>::iterator it = users.begin(); it != users.end(); ++it)
+	{
+		if (it->second->socket == socket)
+		{
+			tmp = it->second;
+			std::cout << it->second->nickname << std::endl;
+			std::cout << "Socket: " << it->second->socket << std::endl;
+			return (*tmp);
+		}
+	}
+	tmp = NULL;
+	return (*tmp);
+}
