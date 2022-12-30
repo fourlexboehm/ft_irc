@@ -1,4 +1,4 @@
-#include "include/Server.hpp"
+#include "Server.hpp"
 
 int main(int argc, char **argv)
 {
@@ -11,10 +11,6 @@ int main(int argc, char **argv)
 	std::cout << "Connect with /connect localhost" << std::endl;
 	Server server("127.0.0.1", std::atoi(argv[1]), std::string(argv[2]));
 
-	init_bot(server);
-	user_t	bot = server.get_user(0);
-	std::cout << bot.is_authenticated << std::endl;
-	
 	int client_socket;
 	char buffer[512];
 	while (true)

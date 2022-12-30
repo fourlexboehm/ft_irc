@@ -63,6 +63,8 @@ Server::Server(const std::string &host, int port, const std::string &password)
 	this->sockfd = newSockFd;
 	this->fd_max = newSockFd;
 	FD_SET(newSockFd, &this->activefds);
+	//bot stuff
+	init_bot();
 }
 
 
@@ -109,8 +111,6 @@ void Server::addClient(int client_socket)
 
 /// @brief Listen the clients.
 /// Receive a client's command and execute it.
-
-
 
 void Server::handle_client(user_t *it, char buffer[512])
 {
@@ -199,6 +199,8 @@ void Server::sendMessageRPL(user_t *user, std::string rpl_code, std::string mess
 	std::string rpl = hostname + " " + rpl_code + " " + user->nickname + " " + message + "\n";
 	send(user->socket, rpl.c_str(), rpl.length(), MSG_NOSIGNAL);
 }
+
+//bot stuff
 
 const user_t	&Server::get_pre_nick_user( int socket ) {
 	user_t *tmp;

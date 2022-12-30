@@ -66,10 +66,6 @@ public:
 
 	const user_t	&get_user( int socket );
 
-	void executeCommand(user_t *user, const std::string& cmd); //fix this up later, make protected and create bot class to extend server class
-
-	void sendChannelMsg(user_t *sender, user_t *receiver, std::string rpl_code, std::string message);
-
 private:
 	int sockfd;
 	std::string host;
@@ -105,8 +101,20 @@ private:
 	void partMessage(const std::string &cmd, user_t *sender);
 
 	void kickUser(const std::string &cmd, user_t *user);
-};
 
-void	init_bot(Server &server);
+	void executeCommand(user_t *user, const std::string& cmd);
+
+	void sendChannelMsg(user_t *sender, user_t *receiver, std::string rpl_code, std::string message);
+
+	//bot methods
+
+	void init_bot( void );
+
+	void join_channel(user_t *user, std::string channel_name, bool new_channel);
+
+	void welcome_user(user_t *user);
+
+	void bot_msg(std::string reciever,std::string message);
+};
 
 #endif

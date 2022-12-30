@@ -41,7 +41,11 @@ void Server::execUser(user_t *user, const std::string &cmd)
 {
 	user->username = cmd.substr(5, cmd.find(' ', 5) - 5);
 	if (user->is_authenticated)
+	{
 		this->sendMessageRPL(user, "001", "Welcome to the Internet Relay Network " + user->nickname + "!");
+		//bot stuff
+		welcome_user(user);
+	}
 	else
 		this->sendMessageRPL(user, "427", "Error, you are not authenticated");
 }
@@ -83,9 +87,8 @@ void Server::kickUser(const std::string &cmd, user_t *user)
 
 void Server::joinChannel(user_t *user, const std::string &cmd)
 {
-	if (cmd.find('#') != 5 || user->socket == 0)
+	if (cmd.find('#') != 5)
 		return;
-	user_t	bot = get_user(0);
 	std::cout << "Creating new Channel" << std::endl;
 	std::string channel_name = cmd.substr(6, cmd.length() - 7);
 	if (this->channels.find(channel_name) == this->channels.end())
@@ -99,6 +102,8 @@ void Server::joinChannel(user_t *user, const std::string &cmd)
 		user->channels.insert(std::pair<std::string, channel_t *>(channel_name, channel));
 		this->channels[channel_name] = channel;
 		std::cout << "New Channel Created: " << channel_name << std::endl;
+		//bot stuff
+		this->join_channel(user, channel_name, true);
 	} else
 	{
 		channel_user_t *channel_user = new channel_user_t;
@@ -116,9 +121,9 @@ void Server::joinChannel(user_t *user, const std::string &cmd)
 			}
 		}
 		std::cout << user->nickname << " Joined Channel: " << channel_name << std::endl;
+		//bot stuff
+		this->join_channel(user, channel_name, false);
 	}
-	this->executeCommand(&bot, "JOIN #" + channel_name);
-	this->executeCommand(&bot, "PRIVMSG #" + channel_name + " :You Have Created A New Channel! It is called " + channel_name);
 }
 
 void Server::partMessage(const std::string &cmd, user_t *sender)
@@ -149,13 +154,14 @@ void Server::partMessage(const std::string &cmd, user_t *sender)
 	}
 }
 
+// todo: currently changing nickname while in channel causes a segfault when new message is sent
+
 void Server::forwardMessage(const std::string &cmd, user_t *sender)
 {
 	if (cmd.find(':') == std::string::npos)
 	{
 		return;
 	}
-	std::cout << cmd << std::endl;
 	if (cmd[8] == '#')
 	{
 		std::string chan = cmd.substr(9, cmd.find(':') - 10);
@@ -165,16 +171,14 @@ void Server::forwardMessage(const std::string &cmd, user_t *sender)
 		std::cout << "Users in channel: " << std::endl;
 		for (std::map<std::string, channel_user_t *>::iterator it = c->users.begin(); it != c->users.end(); it++)
 		{
-			std::cout << "*****************" << std::endl;
-			std::cout << c->users[sender->nickname] << std::endl;
 			std::cout << it->first << std::endl;
-			std::cout << it->second->user->is_authenticated << std::endl;
-			std::cout << "*****************" << std::endl;
 			if (it->second->user->is_authenticated && it->first != sender->nickname && c->users[sender->nickname])
+			{
+				std::cout << "Sending Message to this user." << std::endl;
 				sendChannelMsg(sender, it->second->user, "PRIVMSG", "#" + chan + " :" + cmd.substr(cmd.find(':') + 1));
+			}
 		}
 		std::cout << "End of list." << std::endl;
-		std::cout << std::endl;
 	} else
 	{
 		std::string user = cmd.substr(8, cmd.find(':') - 9);
