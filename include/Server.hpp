@@ -27,6 +27,8 @@
 	# define MSG_NOSIGNAL	0x20000
 # endif
 
+# define BOTNAME	"FRIENDBOT"
+
 typedef struct user {
 	int socket;
 	std::string nickname;

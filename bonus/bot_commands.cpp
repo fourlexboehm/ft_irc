@@ -18,11 +18,12 @@ void	Server::join_channel(user_t *user, std::string channel_name, bool new_chann
 		return ;
 
 	channel_t	*c = this->channels[channel_name];
-	if (c->users["FRIENDBOT"])
+	if (c->users[BOTNAME])
 		return ;
-	c->users.erase("FRIENDBOT");
-	user_t *bot = users["FRIENDBOT"];
-	executeCommand(bot, "JOIN #" + channel_name + '\r'); //extra character needed, don't know why
+
+	c->users.erase(BOTNAME); //this seems like a dumb way to do this
+	user_t 		*bot = users[BOTNAME];
+	executeCommand(bot, "JOIN #" + channel_name + '\r');
 	if (new_channel)
 		bot_msg("#" + channel_name, "You Have Created A New Channel! It is called " + channel_name);
 	else

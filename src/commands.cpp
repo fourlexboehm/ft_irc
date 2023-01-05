@@ -26,11 +26,10 @@ void Server::executeCommand(user_t *user, const std::string &cmd)
 		this->kickUser(cmd, user);
 	else if (cmd.find("QUIT") == 0)
 	{
-	} else if (cmd.find("PING") == 0)
+		//todo: remove user from irc
+	}
+	else if (cmd.find("PING") == 0)
 	{
-		std::cout << cmd.substr(5).compare(this->host) << std::endl;
-		std::cout << "<" << cmd.substr(5) << ">" << std::endl;
-		std::cout << "<" << this->host << ">" << std::endl;
 		if (cmd.substr(5).compare(this->host) == 1)
 		{
 			this->sendMessageRPL(user, "PONG", cmd.substr(5));
@@ -167,12 +166,6 @@ void Server::partMessage(const std::string &cmd, user_t *sender)
 	}
 }
 
-// todo: currently changing nickname while in channel causes a segfault when new message is sent
-// when user is updated from map, that user is no longer recognised in channel because nickname
-// is used as map reference. This means the channel doesn't recognise the user and the iterator
-// segfaults when it reaches the "new" user.
-// Possible solution: use username or socket instead of nickname. Requires refactoring.
-
 void Server::forwardMessage(const std::string &cmd, user_t *sender)
 {
 	if (cmd.find(':') == std::string::npos)
@@ -185,18 +178,23 @@ void Server::forwardMessage(const std::string &cmd, user_t *sender)
 		channel_t *c = this->channels[chan];
 		if (c == NULL)
 			return;
+		if (!c->users[sender->nickname])
+		{
+			c->users.erase(sender->nickname);
+			sendMessageRPL(sender, "404", "User is not authorised for this channel");
+			return ;
+		}
 		std::cout << "Users in channel: " << std::endl;
 		for (std::map<std::string, channel_user_t *>::iterator it = c->users.begin(); it != c->users.end(); it++)
 		{
-			std::cout << it->second->user->nickname << std::endl;
-			// std::cout << "User Authenticated: " << it->second->user->is_authenticated << std::endl;
-			// std::cout << "Nicknames Don't Match: " << it->second->user->nickname << " != " << sender->nickname << std::endl;
-			// std::cout << "User Exists: " << c->users[sender->nickname] << std::endl;
+			std::cout << it->second->user->nickname;
 			if (it->second->user->is_authenticated && it->first != sender->nickname && c->users[sender->nickname])
 			{
-				std::cout << "Forwarding Message To " << it->first << std::endl;
+				std::cout << ", Message Forwarded." << std::endl;
 				sendChannelMsg(sender, it->second->user, "PRIVMSG", "#" + chan + " :" + cmd.substr(cmd.find(':') + 1));
 			}
+			else
+				std::cout << ", Message Not Forwarded." << std::endl;
 		}
 		std::cout << "End of list." << std::endl;
 	} else
@@ -216,8 +214,15 @@ void Server::execNic(user_t *user, const std::string &cmd)
 	if (this->users.find(nickname) == this->users.end())
 	{
 		std::string old_nick = user->nickname;
-		this->users.erase(old_nick); //removing user from map to prevent duplicates
 		user->nickname = nickname;
+		for (std::map<std::string, channel_t *>::iterator it = user->channels.begin(); it != user->channels.end(); it++)
+		{
+			channel_user_t *update = it->second->users[old_nick];
+			update->user = user;
+			it->second->users[user->nickname] = update;
+			it->second->users.erase(old_nick);
+		}
+		this->users.erase(old_nick);
 		this->users[nickname] = user;
 		this->pre_nick_users.erase(user);
 		std::cout << "All Users in Server:" << std::endl;
@@ -226,13 +231,15 @@ void Server::execNic(user_t *user, const std::string &cmd)
 			std::cout << it->second->nickname << std::endl;
 		}
 		std::cout << "End of list." << std::endl;
-		std::cout << user->nickname;
+		std::cout << old_nick;
 		std::cout << " is now called ";
 		std::cout << user->nickname << std::endl;
-	} else if (this->users.find(nickname)->second->socket == user->socket)
+	} 
+	else if (this->users.find(nickname)->second->socket == user->socket)
 	{
 		return;
-	} else
+	}
+	else
 	{
 		this->sendMessageRPL(user, "433", "Nickname is already in use");
 	}
