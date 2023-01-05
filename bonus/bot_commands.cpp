@@ -10,7 +10,6 @@
  * @param new_channel	{bool} - new channel == true, existing channel == false
  * todo: add stuff for user to do
  * todo: add functionality for help channel
- * todo: check if bot is already in channel
  */
 
 void	Server::join_channel(user_t *user, std::string channel_name, bool new_channel)
@@ -18,6 +17,10 @@ void	Server::join_channel(user_t *user, std::string channel_name, bool new_chann
 	if (!user->socket)
 		return ;
 
+	channel_t	*c = this->channels[channel_name];
+	if (c->users["FRIENDBOT"])
+		return ;
+	c->users.erase("FRIENDBOT");
 	user_t *bot = users["FRIENDBOT"];
 	executeCommand(bot, "JOIN #" + channel_name + '\r'); //extra character needed, don't know why
 	if (new_channel)

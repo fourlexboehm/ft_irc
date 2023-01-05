@@ -67,25 +67,27 @@ void Server::kickUser(const std::string &cmd, user_t *user)
 	std::string user_to_kick = cmd.substr(cmd.find(' ', 5) + 1,
 										  cmd.find(' ', cmd.find(' ', 5) + 1) - cmd.find(' ', 5) - 1);
 
+	user_to_kick.erase(remove(user_to_kick.begin(), user_to_kick.end(), '\r'), user_to_kick.end());
 	std::string reason = cmd.substr(cmd.find(':') + 1);
 	if (cmd.find(':') == std::string::npos)
 		reason = "No reason";
 	channel_t *channel = this->channels[channel_name];
 	if (!channel)
 	{
-		this->sendMessageRPL(user, "403", "No such channel");
+		this->sendMessageRPL(user, "403", "Channel " + channel_name + " could not be found.\r");
 		return;
 	}
 	channel_user_t *kickee = channel->users[user_to_kick];
 	channel_user_t *kicker = channel->users[user->nickname];
+	std::cout << "<" << user_to_kick << ">" << std::endl;
 	if (!kickee || !kicker)
 	{
-		this->sendMessageRPL(user, "441", "They aren't on that channel");
+		this->sendMessageRPL(user, "441", "User " + user_to_kick + " not found on " + channel->name + ".\r");
 		return;
 	}
 	if (kickee->is_op || !kicker->is_op)
 	{
-		this->sendMessageRPL(user, "482", "You are not a channel operator");
+		this->sendMessageRPL(user, "482", "You are not a channel operator\r");
 		return;
 	}
 
@@ -187,9 +189,9 @@ void Server::forwardMessage(const std::string &cmd, user_t *sender)
 		for (std::map<std::string, channel_user_t *>::iterator it = c->users.begin(); it != c->users.end(); it++)
 		{
 			std::cout << it->second->user->nickname << std::endl;
-			std::cout << "User Authenticated: " << it->second->user->is_authenticated << std::endl;
-			std::cout << "Nicknames Don't Match: " << it->second->user->nickname << " != " << sender->nickname << std::endl;
-			std::cout << "User Exists: " << c->users[sender->nickname] << std::endl;
+			// std::cout << "User Authenticated: " << it->second->user->is_authenticated << std::endl;
+			// std::cout << "Nicknames Don't Match: " << it->second->user->nickname << " != " << sender->nickname << std::endl;
+			// std::cout << "User Exists: " << c->users[sender->nickname] << std::endl;
 			if (it->second->user->is_authenticated && it->first != sender->nickname && c->users[sender->nickname])
 			{
 				std::cout << "Forwarding Message To " << it->first << std::endl;
