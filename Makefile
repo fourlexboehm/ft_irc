@@ -23,11 +23,11 @@ test: all
 
 client1: all
 	make -C client
-	./client/sic -h localhost -p 6667 -n client1 -k 1
+	./client/sic -h 127.0.0.1 -p 6667 -n client1 -k 1
 
 client2: all
 	${MAKE} -C ./client
-	./client/sic -h localhost -p 6667 -n client2 -k 1
+	./client/sic -h 127.0.0.1 -p 6667 -n client2 -k 1
 
 bonus:		all
 

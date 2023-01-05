@@ -19,7 +19,7 @@ void	Server::join_channel(user_t *user, std::string channel_name, bool new_chann
 		return ;
 
 	user_t *bot = users["FRIENDBOT"];
-	executeCommand(bot, "JOIN #" + channel_name + "!"); //extra character needed, don't know why
+	executeCommand(bot, "JOIN #" + channel_name + '\r'); //extra character needed, don't know why
 	if (new_channel)
 		bot_msg("#" + channel_name, "You Have Created A New Channel! It is called " + channel_name);
 	else
@@ -54,19 +54,17 @@ void Server::welcome_user(user_t *user)
  *
  * @param reciever	{string} - name of the recipient
  * @param message	{string} - content of the message
- * todo: figure out why bot messages print extra new line
  */
 
 void	Server::bot_msg(std::string reciever, std::string message)
 {
-	user_t *bot = users["FRIENDBOT"];
-	executeCommand(bot, "PRIVMSG " + reciever + " :" BCYN + message + CRESET);
+	user_t bot = get_user(0);
+	executeCommand(&bot, "PRIVMSG " + reciever + " :" BCYN + message + CRESET + "\r");
 }
 
 /**
  * @brief	Creates a new user for the bot. Currently uses socket 0 as a dummy for
  * 			the sake of simplicity.
- * todo: figure out why commands require an extra character
  */
 
 void	Server::init_bot( void )
@@ -75,8 +73,8 @@ void	Server::init_bot( void )
 	int	socket = 0;
 	addClient(socket);
 	*bot = get_pre_nick_user(socket);
-	executeCommand(bot, "NICK FRIENDBOT!");
+	executeCommand(bot, "NICK FRIENDBOT\r");
 	*bot = get_user(socket);
 	bot->is_authenticated = true;
-	executeCommand(bot, "JOIN #help!");
+	executeCommand(bot, "JOIN #help\r");
 }
