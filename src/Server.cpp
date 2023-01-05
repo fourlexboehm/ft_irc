@@ -221,8 +221,6 @@ const user_t	&Server::get_user( int socket ) {
 		if (it->second->socket == socket)
 		{
 			tmp = it->second;
-			std::cout << it->second->nickname << std::endl;
-			std::cout << "Socket: " << it->second->socket << std::endl;
 			return (*tmp);
 		}
 	}

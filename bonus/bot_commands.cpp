@@ -18,12 +18,13 @@ void	Server::join_channel(user_t *user, std::string channel_name, bool new_chann
 		return ;
 
 	channel_t	*c = this->channels[channel_name];
-	if (c->users[BOTNAME])
-		return ;
+	if (!c->users[BOTNAME])
+	{
+		c->users.erase(BOTNAME);
+		user_t 		*bot = users[BOTNAME];
+		executeCommand(bot, "JOIN #" + channel_name + '\r');
+	}
 
-	c->users.erase(BOTNAME); //this seems like a dumb way to do this
-	user_t 		*bot = users[BOTNAME];
-	executeCommand(bot, "JOIN #" + channel_name + '\r');
 	if (new_channel)
 		bot_msg("#" + channel_name, "You Have Created A New Channel! It is called " + channel_name);
 	else
@@ -31,6 +32,9 @@ void	Server::join_channel(user_t *user, std::string channel_name, bool new_chann
 	if (!channel_name.compare("help"))
 	{
 		bot_msg("#" + channel_name, "Here are some things you can do:");
+		bot_msg("#" + channel_name, ":NICK <nickname> to change your nickname");
+		bot_msg("#" + channel_name, ":JOIN #<channel_name> to create or join a channel");
+		bot_msg("#" + channel_name, ":KICK #<channel_name> <nickname> : <reason> to remove a user from a channel you have created");
 		//todo: add stuff for user to do
 	}
 }

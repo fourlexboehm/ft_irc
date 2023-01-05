@@ -1,6 +1,9 @@
 # include "../include/Server.hpp"
 
-//todo: cmds have strange properties
+//todo: find way to cleanly close server
+//todo: prevent users with same username from joining server
+//todo: remove users from server. Both for removing clients with matching nicknames
+//and removing them once the user quits
 
 void Server::executeCommand(user_t *user, const std::string &cmd)
 {
