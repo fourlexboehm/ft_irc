@@ -27,6 +27,8 @@ void Server::executeCommand(user_t *user, const std::string &cmd)
 		this->partMessage(cmd, user);
 	else if (cmd.find("KICK") == 0)
 		this->kickUser(cmd, user);
+	else if (cmd.find("LIST") == 0)
+		this->listChannles(user, cmd);
 	else if (cmd.find("QUIT") == 0)
 	{
 		//todo: remove user from irc
@@ -69,7 +71,7 @@ void Server::kickUser(const std::string &cmd, user_t *user)
 	std::string user_to_kick = cmd.substr(cmd.find(' ', 5) + 1,
 										  cmd.find(' ', cmd.find(' ', 5) + 1) - cmd.find(' ', 5) - 1);
 
-	user_to_kick.erase(remove(user_to_kick.begin(), user_to_kick.end(), '\r'), user_to_kick.end());
+	// user_to_kick.erase(remove(user_to_kick.begin(), user_to_kick.end(), '\r'), user_to_kick.end());
 	std::string reason = cmd.substr(cmd.find(':') + 1);
 	if (cmd.find(':') == std::string::npos)
 		reason = "No reason";
@@ -104,7 +106,8 @@ void Server::joinChannel(user_t *user, const std::string &cmd)
 {
 	if (cmd.find('#') != 5)
 		return;
-	std::string channel_name = cmd.substr(6, cmd.length() - 7);
+	std::string channel_name = cmd.substr(5, cmd.length() - 6);
+	std::cout << "CHANNEL NAME: " << channel_name << std::endl;
 	if (this->channels.find(channel_name) == this->channels.end())
 	{
 		std::cout << "Creating new Channel" << std::endl;
@@ -117,6 +120,7 @@ void Server::joinChannel(user_t *user, const std::string &cmd)
 		user->channels.insert(std::pair<std::string, channel_t *>(channel_name, channel));
 		this->channels[channel_name] = channel;
 		std::cout << "New Channel Created: " << channel_name << std::endl;
+		this->sendChannelMsg(user, user, "JOIN", channel_name);
 		//bot stuff
 		this->join_channel(user, channel_name, true);
 	} else
@@ -127,6 +131,7 @@ void Server::joinChannel(user_t *user, const std::string &cmd)
 		channel_t *channel = this->channels[channel_name];
 		channel->users.insert(std::pair<std::string, channel_user_t *>(user->nickname, channel_user));
 		user->channels.insert(std::pair<std::string, channel_t *>(channel_name, channel));
+		this->sendChannelMsg(user, user, "JOIN", channel_name);
 		for (std::map<std::string, channel_user_t *>::iterator it = channel->users.begin();
 			 it != channel->users.end(); ++it)
 		{
@@ -141,11 +146,20 @@ void Server::joinChannel(user_t *user, const std::string &cmd)
 	}
 }
 
+void Server::listChannles(user_t *user, const std::string& cmd)
+{
+	for (std::map<std::string, channel_t *>::iterator it = channels.begin(); it != channels.end(); it++)
+	{
+		this->sendMessageRPL(user, "", "#" + it->first + "\r");
+	}
+	(void) cmd;
+}
+
 void Server::partMessage(const std::string &cmd, user_t *sender)
 {
 	if (cmd[5] != '#')
 		return;
-	std::string channel_name = cmd.substr(6, cmd.find(':') - 7);
+	std::string channel_name = cmd.substr(5, cmd.find(':') - 6);
 	if (cmd.find(':') == std::string::npos) {
 		channel_name = cmd.substr(6, cmd.length() - 7);
 	}
@@ -161,10 +175,10 @@ void Server::partMessage(const std::string &cmd, user_t *sender)
 		for (std::map<std::string, channel_user_t *>::iterator it = channel->users.begin();
 			 it != channel->users.end(); ++it)
 		{
-			if (it->first != sender->nickname)
-			{
+			// if (it->first != sender->nickname)
+			// {
 				this->sendChannelMsg(sender, it->second->user, "", cmd);
-			}
+			// }
 		}
 	}
 }
@@ -177,7 +191,8 @@ void Server::forwardMessage(const std::string &cmd, user_t *sender)
 	}
 	if (cmd[8] == '#')
 	{
-		std::string chan = cmd.substr(9, cmd.find(':') - 10);
+		std::string chan = cmd.substr(8, cmd.find(':') - 9);
+		std::cout << "CHANNEL NAME: " << chan << std::endl;
 		channel_t *c = this->channels[chan];
 		if (c == NULL)
 			return;
@@ -194,7 +209,7 @@ void Server::forwardMessage(const std::string &cmd, user_t *sender)
 			if (it->second->user->is_authenticated && it->first != sender->nickname && c->users[sender->nickname])
 			{
 				std::cout << ", Message Forwarded." << std::endl;
-				sendChannelMsg(sender, it->second->user, "PRIVMSG", "#" + chan + " :" + cmd.substr(cmd.find(':') + 1));
+				sendChannelMsg(sender, it->second->user, "PRIVMSG", chan + " :" + cmd.substr(cmd.find(':') + 1));
 			}
 			else
 				std::cout << ", Message Not Forwarded." << std::endl;
@@ -205,9 +220,11 @@ void Server::forwardMessage(const std::string &cmd, user_t *sender)
 		std::string user = cmd.substr(8, cmd.find(':') - 9);
 		user_t *u = this->users[user];
 		if (u && u->is_authenticated && u != sender)
+		{
 			sendChannelMsg(sender, u, "", cmd);
-		else
-			sendMessageRPL(sender, "404", "User not found");
+			return ;
+		}
+		sendMessageRPL(sender, "404", "User not found");
 	}
 }
 
@@ -216,6 +233,7 @@ void Server::execNic(user_t *user, const std::string &cmd)
 	std::string nickname = cmd.substr(5, cmd.length() - 6);
 	if (this->users.find(nickname) == this->users.end())
 	{
+		sendChannelMsg(user, user, "NICK", cmd.substr(cmd.find(' ') + 1));
 		std::string old_nick = user->nickname;
 		user->nickname = nickname;
 		for (std::map<std::string, channel_t *>::iterator it = user->channels.begin(); it != user->channels.end(); it++)
@@ -237,7 +255,7 @@ void Server::execNic(user_t *user, const std::string &cmd)
 		std::cout << old_nick;
 		std::cout << " is now called ";
 		std::cout << user->nickname << std::endl;
-	} 
+	}
 	else if (this->users.find(nickname)->second->socket == user->socket)
 	{
 		return;

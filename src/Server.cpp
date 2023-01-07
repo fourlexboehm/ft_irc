@@ -189,6 +189,7 @@ void Server::sendChannelMsg(user_t *sender, user_t *receiver, std::string rpl_co
 {
 	std::string hostname = ":" + sender->nickname + "!" + sender->username + "@" + this->host;
 	std::string rpl = hostname + " " + rpl_code + " " + message + "\n";
+	std::cout << "Channel msg: " << rpl << std::endl;
 	send(receiver->socket, rpl.c_str(), rpl.length(), MSG_NOSIGNAL);
 }
 
