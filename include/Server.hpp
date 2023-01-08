@@ -108,7 +108,9 @@ private:
 
 	void sendChannelMsg(user_t *sender, user_t *receiver, std::string rpl_code, std::string message);
 
-	void listChannles(user_t *user, const std::string& cmd);
+	void listChannels(user_t *user);
+
+	void channelWho(user_t *user, const std::string &cmd);
 
 	//bot methods
 

@@ -189,7 +189,7 @@ void Server::sendChannelMsg(user_t *sender, user_t *receiver, std::string rpl_co
 {
 	std::string hostname = ":" + sender->nickname + "!" + sender->username + "@" + this->host;
 	std::string rpl = hostname + " " + rpl_code + " " + message + "\n";
-	std::cout << "Channel msg: " << rpl << std::endl;
+	std::cout << "Channel msg: " << rpl;
 	send(receiver->socket, rpl.c_str(), rpl.length(), MSG_NOSIGNAL);
 }
 
@@ -197,7 +197,7 @@ void Server::sendMessageRPL(user_t *user, std::string rpl_code, std::string mess
 {
 	std::string hostname = ":" + this->host;
 	std::string rpl = hostname + " " + rpl_code + " " + user->nickname + " " + message + "\n";
-	std::cout << rpl << std::endl;
+	std::cout << rpl;
 	send(user->socket, rpl.c_str(), rpl.length(), MSG_NOSIGNAL);
 }
 

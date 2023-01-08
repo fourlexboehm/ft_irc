@@ -28,7 +28,9 @@ void Server::executeCommand(user_t *user, const std::string &cmd)
 	else if (cmd.find("KICK") == 0)
 		this->kickUser(cmd, user);
 	else if (cmd.find("LIST") == 0)
-		this->listChannles(user, cmd);
+		this->listChannels(user);
+	else if (cmd.find("WHO") == 0)
+		this->channelWho(user, cmd);
 	else if (cmd.find("QUIT") == 0)
 	{
 		//todo: remove user from irc
@@ -146,13 +148,54 @@ void Server::joinChannel(user_t *user, const std::string &cmd)
 	}
 }
 
-void Server::listChannles(user_t *user, const std::string& cmd)
+//todo: implement itoa so that number of users can be displayed in each channel
+
+void Server::listChannels(user_t *user)
 {
+	std::string chans;
 	for (std::map<std::string, channel_t *>::iterator it = channels.begin(); it != channels.end(); it++)
 	{
-		this->sendMessageRPL(user, "", "#" + it->first + "\r");
+		int i = 0;
+		for (std::map<std::string, channel_user_t *>::iterator it2 = it->second->users.begin(); it2 != it->second->users.end(); it2++)
+		{
+			i++;
+		}
+		//implement itoa I guess
+		(void)i;
+		this->sendMessageRPL(user, "322", it->first + " 1" + "\r");
 	}
-	(void) cmd;
+}
+
+//todo: figure out how this is supposed to work
+
+void Server::channelWho(user_t *user, const std::string &cmd)
+{
+	if (cmd[4] != '#')
+		return;
+	std::string channel_name = cmd.substr(4, cmd.find(':') - 5);
+	channel_name = channel_name.substr(0, channel_name.length() - 1);
+	if (channels.find(channel_name) == channels.end())
+		return ;
+	channel_t *channel = channels[channel_name];
+	if (channel == NULL)
+		return;
+	for (std::map<std::string, channel_user_t *>::iterator it = channel->users.begin(); it != channel->users.end(); it++)
+	{
+		std::string user_info;
+		if (it->second->is_op)
+		{
+			user_info = ":" + this->host + " 352 " + user->nickname + " " + channel->name + " ~" + it->first + " " + this->host + " " + it->first + " H@x: 0 " + it->first + "\n";
+		}
+		else
+		{
+			user_info = ":" + this->host + " 352 " + user->nickname + " " + channel->name + " ~" + it->first + " " + this->host + " " + it->first + " Hx: 0 " + it->first + "\n";
+		}
+		std::cout << user_info << std::endl;
+		send(user->socket, user_info.c_str(), user_info.length(), MSG_NOSIGNAL);
+	}
+	std::string final_msg = ":" + this->host + " 315 " + user->nickname + " " + channel->name + ": " + "End of /WHO list\n";
+	std::cout << final_msg << std::endl;
+	send(user->socket, final_msg.c_str(), final_msg.length(), MSG_NOSIGNAL);
 }
 
 void Server::partMessage(const std::string &cmd, user_t *sender)

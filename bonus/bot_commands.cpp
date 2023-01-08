@@ -67,7 +67,7 @@ void Server::welcome_user(user_t *user)
 void	Server::bot_msg(std::string reciever, std::string message)
 {
 	user_t bot = get_user(0);
-	executeCommand(&bot, "PRIVMSG " + reciever + " :" BCYN + message + CRESET + "\r");
+	executeCommand(&bot, "PRIVMSG " + reciever + " :" + message + "\r");
 }
 
 /**
