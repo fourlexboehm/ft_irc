@@ -34,6 +34,7 @@ void Server::executeCommand(user_t *user, const std::string &cmd)
 		this->channelWho(user, cmd);
 	else if (cmd.find("QUIT") == 0)
 	{
+		user->is_disconnected = true;
 		//todo: remove user from irc
 	}
 	else if (cmd.find("PING") == 0)
@@ -284,7 +285,6 @@ void Server::execNic(user_t *user, const std::string &cmd)
 			update->user = user;
 			it->second->users[user->nickname] = update;
 			it->second->users.erase(old_nick);
-			std::cout << "HI" << std::endl;
 		}
 		this->users.erase(old_nick);
 		this->users[nickname] = user;
@@ -309,9 +309,9 @@ void Server::execNic(user_t *user, const std::string &cmd)
 		this->sendMessageRPL(user, "433", "Nickname is already in use");
 		//if the user has tried to join using an existing nickname, it should
 		//be rejected. Remove user from server and close socket.
-		if (user->nickname.empty())
+		if (pre_nick_users.find(user) != pre_nick_users.end())
 		{
-
+			user->is_authenticated = false;
 			close(user->socket);
 		}
 	}

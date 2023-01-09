@@ -211,11 +211,10 @@ void Server::clientCheck( void )
 	for (std::map<std::string, user_t *>::iterator it = this->users.begin(); it != this->users.end(); it++)
 	{
 		listen(it->second->socket, 128);
-		std::cout << "recv: " << recv(it->second->socket, buffer, 1, 0) << std::endl;
 		if (!recv(it->second->socket, buffer, 1, 0) && it->second != NULL)
 		{
 			std::cout << it->first << " has disconnected" << std::endl;
-			users.erase(it->second->nickname);
+			it->second->is_disconnected = true;
 			break ;
 		}
 	}
