@@ -68,6 +68,8 @@ public:
 
 	const user_t	&get_user( int socket );
 
+	void clientCheck( void );
+
 private:
 	int sockfd;
 	std::string host;

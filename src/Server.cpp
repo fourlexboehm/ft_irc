@@ -201,6 +201,26 @@ void Server::sendMessageRPL(user_t *user, std::string rpl_code, std::string mess
 	send(user->socket, rpl.c_str(), rpl.length(), MSG_NOSIGNAL);
 }
 
+//brokded
+
+void Server::clientCheck( void )
+{
+	if (users.empty())
+		return ;
+	char *buffer[256];
+	for (std::map<std::string, user_t *>::iterator it = this->users.begin(); it != this->users.end(); it++)
+	{
+		listen(it->second->socket, 128);
+		std::cout << "recv: " << recv(it->second->socket, buffer, 1, 0) << std::endl;
+		if (!recv(it->second->socket, buffer, 1, 0) && it->second != NULL)
+		{
+			std::cout << it->first << " has disconnected" << std::endl;
+			users.erase(it->second->nickname);
+			break ;
+		}
+	}
+}
+
 //bot stuff
 
 const user_t	&Server::get_pre_nick_user( int socket ) {

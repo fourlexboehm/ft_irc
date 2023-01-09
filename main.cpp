@@ -19,6 +19,7 @@ int main(int argc, char **argv)
 		if (client_socket != -1)
 			server.addClient(client_socket);
 		server.listenClients(buffer);
+		// server.clientCheck();
 	}
 	//todo add safe exit
 	return (0);

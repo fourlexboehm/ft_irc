@@ -4,6 +4,7 @@
 //todo: prevent users with same username from joining server
 //todo: remove users from server. Both for removing clients with matching nicknames
 //and removing them once the user quits
+//todo: if a user is disconnected from the server for any reason, they should be removed
 
 void Server::executeCommand(user_t *user, const std::string &cmd)
 {
@@ -67,11 +68,14 @@ void Server::execUser(user_t *user, const std::string &cmd)
 }
 
 //operator commands
+
 void Server::kickUser(const std::string &cmd, user_t *user)
 {
-	std::string channel_name = cmd.substr(6, cmd.find(' ', 5) - 6);
+	std::string channel_name = "#" + cmd.substr(6, cmd.find(' ', 5) - 6);
 	std::string user_to_kick = cmd.substr(cmd.find(' ', 5) + 1,
 										  cmd.find(' ', cmd.find(' ', 5) + 1) - cmd.find(' ', 5) - 1);
+	if (user_to_kick.find('\r'))
+		user_to_kick = user_to_kick.substr(0, user_to_kick.length() - 1);
 
 	// user_to_kick.erase(remove(user_to_kick.begin(), user_to_kick.end(), '\r'), user_to_kick.end());
 	std::string reason = cmd.substr(cmd.find(':') + 1);
@@ -88,7 +92,7 @@ void Server::kickUser(const std::string &cmd, user_t *user)
 	std::cout << "<" << user_to_kick << ">" << std::endl;
 	if (!kickee || !kicker)
 	{
-		this->sendMessageRPL(user, "441", "User " + user_to_kick + " not found on " + channel->name + ".\r");
+		this->sendMessageRPL(user, "441", "User " + user_to_kick + " not found on " + channel_name + ".\r");
 		return;
 	}
 	if (kickee->is_op || !kicker->is_op)
@@ -97,7 +101,7 @@ void Server::kickUser(const std::string &cmd, user_t *user)
 		return;
 	}
 
-	partMessage("PART #" + channel_name + " :"  +  kickee->user->nickname + " Kicked For "+ reason, kickee->user);
+	partMessage("PART " + channel_name + " :"  +  kickee->user->nickname + " Kicked For "+ reason, kickee->user);
 	return;
 }
 
@@ -160,9 +164,9 @@ void Server::listChannels(user_t *user)
 		{
 			i++;
 		}
-		//implement itoa I guess
-		(void)i;
-		this->sendMessageRPL(user, "322", it->first + " 1" + "\r");
+		//this is the shortest equivalent to itoa available in c++98
+		std::string count = static_cast<std::ostringstream &>(std::ostringstream() << std::dec << i ).str();
+		this->sendMessageRPL(user, "322", it->first + " " + count + "\r");
 	}
 }
 
@@ -181,21 +185,17 @@ void Server::channelWho(user_t *user, const std::string &cmd)
 		return;
 	for (std::map<std::string, channel_user_t *>::iterator it = channel->users.begin(); it != channel->users.end(); it++)
 	{
-		std::string user_info;
 		if (it->second->is_op)
 		{
-			user_info = ":" + this->host + " 352 " + user->nickname + " " + channel->name + " ~" + it->first + " " + this->host + " " + it->first + " H@x: 0 " + it->first + "\n";
+			this->sendMessageRPL(user, "352", user->nickname + " " + channel->name + " ~" + it->first + " " + this->host + " " + it->first + " H@x: 0 " + it->first);
 		}
 		else
 		{
-			user_info = ":" + this->host + " 352 " + user->nickname + " " + channel->name + " ~" + it->first + " " + this->host + " " + it->first + " Hx: 0 " + it->first + "\n";
+			this->sendMessageRPL(user, "352", user->nickname + " " + channel->name + " ~" + it->first + " " + this->host + " " + it->first + " Hx: 0 " + it->first);
 		}
-		std::cout << user_info << std::endl;
-		send(user->socket, user_info.c_str(), user_info.length(), MSG_NOSIGNAL);
+
 	}
-	std::string final_msg = ":" + this->host + " 315 " + user->nickname + " " + channel->name + ": " + "End of /WHO list\n";
-	std::cout << final_msg << std::endl;
-	send(user->socket, final_msg.c_str(), final_msg.length(), MSG_NOSIGNAL);
+	this->sendMessageRPL(user, "315", user->nickname + " " + channel->name + ":End of /WHO list");
 }
 
 void Server::partMessage(const std::string &cmd, user_t *sender)
@@ -206,23 +206,22 @@ void Server::partMessage(const std::string &cmd, user_t *sender)
 	if (cmd.find(':') == std::string::npos) {
 		channel_name = cmd.substr(6, cmd.length() - 7);
 	}
+	std::cout << channel_name << std::endl;
 	if (this->channels[channel_name] == NULL)
 		return;
 	else
 	{
+		std::cout << "Removing " << sender->nickname << " from " << channel_name << std::endl;
 		channel_t *channel = this->channels[channel_name];
+		for (std::map<std::string, channel_user_t *>::iterator it = channel->users.begin();
+			 it != channel->users.end(); ++it)
+		{
+			this->sendChannelMsg(sender, it->second->user, "", cmd);
+		}
 		channel_user_t *channel_user = channel->users[sender->nickname];
 		channel->users.erase(sender->nickname);
 		delete channel_user;
 		sender->channels.erase(channel_name);
-		for (std::map<std::string, channel_user_t *>::iterator it = channel->users.begin();
-			 it != channel->users.end(); ++it)
-		{
-			// if (it->first != sender->nickname)
-			// {
-				this->sendChannelMsg(sender, it->second->user, "", cmd);
-			// }
-		}
 	}
 }
 
@@ -285,10 +284,12 @@ void Server::execNic(user_t *user, const std::string &cmd)
 			update->user = user;
 			it->second->users[user->nickname] = update;
 			it->second->users.erase(old_nick);
+			std::cout << "HI" << std::endl;
 		}
 		this->users.erase(old_nick);
 		this->users[nickname] = user;
-		this->pre_nick_users.erase(user);
+		if (pre_nick_users.find(user) == pre_nick_users.end())
+			this->pre_nick_users.erase(user);
 		std::cout << "All Users in Server:" << std::endl;
 		for (std::map<std::string, user_t *>::iterator it = this->users.begin(); it != this->users.end(); it++)
 		{
@@ -306,6 +307,13 @@ void Server::execNic(user_t *user, const std::string &cmd)
 	else
 	{
 		this->sendMessageRPL(user, "433", "Nickname is already in use");
+		//if the user has tried to join using an existing nickname, it should
+		//be rejected. Remove user from server and close socket.
+		if (user->nickname.empty())
+		{
+
+			close(user->socket);
+		}
 	}
 }
 

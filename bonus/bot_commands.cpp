@@ -29,7 +29,7 @@ void	Server::join_channel(user_t *user, std::string channel_name, bool new_chann
 		bot_msg(channel_name, "You Have Created A New Channel! It is called " + channel_name);
 	else
 		bot_msg(channel_name, "Welcome " + user->nickname + " to " + channel_name);
-	if (!channel_name.compare("help"))
+	if (!channel_name.compare("#help"))
 	{
 		bot_msg(channel_name, "Here are some things you can do:");
 		bot_msg(channel_name, ":NICK <nickname> to change your nickname");
