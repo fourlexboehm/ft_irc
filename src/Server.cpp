@@ -197,7 +197,6 @@ void Server::sendMessageRPL(user_t *user, std::string rpl_code, std::string mess
 {
 	std::string hostname = ":" + this->host;
 	std::string rpl = hostname + " " + rpl_code + " " + user->nickname + " " + message + "\n";
-	std::cout << rpl;
 	send(user->socket, rpl.c_str(), rpl.length(), MSG_NOSIGNAL);
 }
 

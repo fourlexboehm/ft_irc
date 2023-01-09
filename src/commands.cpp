@@ -72,16 +72,33 @@ void Server::execUser(user_t *user, const std::string &cmd)
 
 void Server::kickUser(const std::string &cmd, user_t *user)
 {
+	if (cmd.find('#') == std::string::npos)
+	{
+		this->sendMessageRPL(user, "403", "No Channel was specified.\r");
+		return ;
+	}
+	if (cmd.find(' ', 5) == std::string::npos)
+	{
+		this->sendMessageRPL(user, "403", "No User was specified.\r");
+		return ;
+	}
 	std::string channel_name = "#" + cmd.substr(6, cmd.find(' ', 5) - 6);
-	std::string user_to_kick = cmd.substr(cmd.find(' ', 5) + 1,
-										  cmd.find(' ', cmd.find(' ', 5) + 1) - cmd.find(' ', 5) - 1);
-	if (user_to_kick.find('\r'))
-		user_to_kick = user_to_kick.substr(0, user_to_kick.length() - 1);
+	std::string user_to_kick;
+	std::string reason;
 
-	// user_to_kick.erase(remove(user_to_kick.begin(), user_to_kick.end(), '\r'), user_to_kick.end());
-	std::string reason = cmd.substr(cmd.find(':') + 1);
 	if (cmd.find(':') == std::string::npos)
+	{
+		user_to_kick = cmd.substr(cmd.rfind(' ', cmd.length()) + 1,
+			cmd.length() - cmd.find(' ', 5) - 2);
 		reason = "No reason";
+	}
+	else
+	{
+		reason = cmd.substr(cmd.find(':') + 1);
+		user_to_kick = cmd.substr(cmd.find(' ', 5) + 1,
+			cmd.find(' ', cmd.find(' ', 5) + 1) - cmd.find(' ', 5) - 1);
+	}
+	
 	channel_t *channel = this->channels[channel_name];
 	if (!channel)
 	{
@@ -90,15 +107,19 @@ void Server::kickUser(const std::string &cmd, user_t *user)
 	}
 	channel_user_t *kickee = channel->users[user_to_kick];
 	channel_user_t *kicker = channel->users[user->nickname];
-	std::cout << "<" << user_to_kick << ">" << std::endl;
 	if (!kickee || !kicker)
 	{
 		this->sendMessageRPL(user, "441", "User " + user_to_kick + " not found on " + channel_name + ".\r");
 		return;
 	}
-	if (kickee->is_op || !kicker->is_op)
+	if (!kicker->is_op)
 	{
 		this->sendMessageRPL(user, "482", "You are not a channel operator\r");
+		return;
+	}
+	if (kickee->is_op)
+	{
+		this->sendMessageRPL(user, "482", "You cannot kick yourself\r");
 		return;
 	}
 
@@ -207,7 +228,6 @@ void Server::partMessage(const std::string &cmd, user_t *sender)
 	if (cmd.find(':') == std::string::npos) {
 		channel_name = cmd.substr(6, cmd.length() - 7);
 	}
-	std::cout << channel_name << std::endl;
 	if (this->channels[channel_name] == NULL)
 		return;
 	else
