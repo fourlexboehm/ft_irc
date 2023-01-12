@@ -33,7 +33,7 @@ typedef struct user {
 	int socket;
 	std::string nickname;
 	std::string username;
-	std::string commands;
+	std::queue<std::string> commands;
 	bool is_server_op;
 	bool is_disconnected;
 	bool is_registered;

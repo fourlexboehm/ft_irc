@@ -1,10 +1,6 @@
 # include "../include/Server.hpp"
 
-//todo: find way to cleanly close server
-//todo: prevent users with same username from joining server
-//todo: remove users from server. Both for removing clients with matching nicknames
-//and removing them once the user quits
-//todo: if a user is disconnected from the server for any reason, they should be removed
+//todo: find way to cleanly close servers
 
 void Server::executeCommand(user_t *user, const std::string &cmd)
 {
@@ -63,7 +59,7 @@ void Server::execUser(user_t *user, const std::string &cmd)
 	{
 		this->sendMessageRPL(user, "001", "Welcome to the Internet Relay Network " + user->nickname + "!");
 		//bot stuff
-		welcome_user(user);
+		// welcome_user(user);
 	}
 	else
 		this->sendMessageRPL(user, "427", "Error, unauthenticated or invalid command");
@@ -151,7 +147,7 @@ void Server::joinChannel(user_t *user, const std::string &cmd)
 		std::cout << "New Channel Created: " << channel_name << std::endl;
 		this->sendChannelMsg(user, user, "JOIN", channel_name);
 		//bot stuff
-		this->join_channel(user, channel_name, true);
+		// this->join_channel(user, channel_name, true);
 	} else
 	{
 		channel_user_t *channel_user = new channel_user_t;
@@ -171,7 +167,7 @@ void Server::joinChannel(user_t *user, const std::string &cmd)
 		}
 		std::cout << user->nickname << " Joined Channel: " << channel_name << std::endl;
 		//bot stuff
-		this->join_channel(user, channel_name, false);
+		// this->join_channel(user, channel_name, false);
 	}
 }
 
@@ -340,19 +336,29 @@ void Server::execNic(user_t *user, const std::string &cmd)
 
 void Server::parseCommands(user_t *user)
 {
+	int	i = 0;
 	while (!user->commands.empty())
 	{
-		std::string cmd = user->commands;
+		std::cout << i++ << std::endl;
+		std::string cmd = user->commands.front();
+		if (cmd.length() < 2)
+		{
+			user->commands.pop();
+			continue ;
+		}
+
 		if (cmd[cmd.size() - 1] != '\r' && cmd[cmd.size() - 1] != '\n')
 		{
 			std::cout << "Incomplete message: " << cmd << std::endl;
+			int w = cmd[cmd.size() - 1];
+			std::cout << w << std::endl;
 			//this message wasn't complete, so we'll handle it later
 			return;
 		}
 		if (cmd[cmd.size() - 1] == '\n')
 			cmd[cmd.size() - 1] = '\r';
 		executeCommand(user, cmd);
-		user->commands.clear();
+		user->commands.pop();
 	}
 }
 

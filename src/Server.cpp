@@ -159,13 +159,25 @@ void Server::handle_client(user_t *it, char buffer[512])
 			// use separator to read lines of the buffer
 			if (!it->commands.empty())
 			{
-				std::string tmp = it->commands;
-				std::getline(buff_stream, it->commands, '\0');
-				tmp += it->commands;
-				it->commands = tmp;
+				std::string tmp = it->commands.back();
+				std::getline(buff_stream, it->commands.back(), '\0');
+				tmp += it->commands.back();
+				it->commands.back() = tmp;
 			}
-			for (std::string line; std::getline(buff_stream, line, '\0');)
-				it->commands += line;
+			std::string line;
+			std::getline(buff_stream, line, '\0');
+			if (line.find('\r') == std::string::npos && it->commands.empty())
+				it->commands.push(line);
+			while (line.find('\r') != std::string::npos)
+			{	
+				it->commands.push(line.substr(0, line.find('\n')));
+				size_t len = it->commands.back().length() + 1;
+				line = line.substr(len, line.length() - len);
+				std::cout << "Line: " << line << std::endl;
+				std::cout << "command: " << it->commands.back() << std::endl;
+				if (line.length() < 2)
+					break ;
+			}
 			parseCommands(it);
 		}
 	}
