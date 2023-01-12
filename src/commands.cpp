@@ -52,6 +52,7 @@ void Server::executeCommand(user_t *user, const std::string &cmd)
 	} else
 	{
 		std::cout << "unknown command" << std::endl;
+		this->sendMessageRPL(user, "427", "Error, you are not authenticated");
 	}
 }
 
@@ -65,7 +66,7 @@ void Server::execUser(user_t *user, const std::string &cmd)
 		welcome_user(user);
 	}
 	else
-		this->sendMessageRPL(user, "427", "Error, you are not authenticated");
+		this->sendMessageRPL(user, "427", "Error, unauthenticated or invalid command");
 }
 
 //operator commands
@@ -341,12 +342,17 @@ void Server::parseCommands(user_t *user)
 {
 	while (!user->commands.empty())
 	{
-		std::string cmd = user->commands.front();
-		if (cmd[cmd.size() - 1] != '\r')
+		std::string cmd = user->commands;
+		if (cmd[cmd.size() - 1] != '\r' && cmd[cmd.size() - 1] != '\n')
+		{
+			std::cout << "Incomplete message: " << cmd << std::endl;
 			//this message wasn't complete, so we'll handle it later
 			return;
+		}
+		if (cmd[cmd.size() - 1] == '\n')
+			cmd[cmd.size() - 1] = '\r';
 		executeCommand(user, cmd);
-		user->commands.pop();
+		user->commands.clear();
 	}
 }
 
