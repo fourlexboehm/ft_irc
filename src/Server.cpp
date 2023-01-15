@@ -223,11 +223,25 @@ void Server::clientCheck( void )
 {
 	if (users.empty())
 		return ;
-	char *buffer[256];
+	//checking pre-nick users
+	for (std::set<user_t *>::iterator it = this->pre_nick_users.begin(); it != this->pre_nick_users.end(); it++)
+	{
+		user_t *tmp = *it;
+		if (!tmp->socket)
+			continue ;
+		if (!recv(tmp->socket, NULL, 1, MSG_PEEK | MSG_DONTWAIT))
+		{
+			std::cout << "Socket " << tmp->socket << " has disconnected" << std::endl;
+			tmp->is_disconnected = true;
+			break ;
+		}
+	}	
+	//checking valid users
 	for (std::map<std::string, user_t *>::iterator it = this->users.begin(); it != this->users.end(); it++)
 	{
-		listen(it->second->socket, 128);
-		if (!recv(it->second->socket, buffer, 1, 0) && it->second != NULL)
+		if (!it->second->socket)
+			continue ;
+		if (!recv(it->second->socket, NULL, 1, MSG_PEEK | MSG_DONTWAIT))
 		{
 			std::cout << it->first << " has disconnected" << std::endl;
 			it->second->is_disconnected = true;

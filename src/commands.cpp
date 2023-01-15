@@ -48,7 +48,7 @@ void Server::executeCommand(user_t *user, const std::string &cmd)
 	} else
 	{
 		std::cout << "unknown command" << std::endl;
-		this->sendMessageRPL(user, "427", "Error, you are not authenticated");
+		this->sendMessageRPL(user, "427", "Error, unknown command or user not authenticated");
 	}
 }
 
@@ -59,7 +59,7 @@ void Server::execUser(user_t *user, const std::string &cmd)
 	{
 		this->sendMessageRPL(user, "001", "Welcome to the Internet Relay Network " + user->nickname + "!");
 		//bot stuff
-		// welcome_user(user);
+		welcome_user(user);
 	}
 	else
 		this->sendMessageRPL(user, "427", "Error, unauthenticated or invalid command");
@@ -147,7 +147,7 @@ void Server::joinChannel(user_t *user, const std::string &cmd)
 		std::cout << "New Channel Created: " << channel_name << std::endl;
 		this->sendChannelMsg(user, user, "JOIN", channel_name);
 		//bot stuff
-		// this->join_channel(user, channel_name, true);
+		this->join_channel(user, channel_name, true);
 	} else
 	{
 		channel_user_t *channel_user = new channel_user_t;
@@ -167,7 +167,7 @@ void Server::joinChannel(user_t *user, const std::string &cmd)
 		}
 		std::cout << user->nickname << " Joined Channel: " << channel_name << std::endl;
 		//bot stuff
-		// this->join_channel(user, channel_name, false);
+		this->join_channel(user, channel_name, false);
 	}
 }
 
@@ -336,10 +336,8 @@ void Server::execNic(user_t *user, const std::string &cmd)
 
 void Server::parseCommands(user_t *user)
 {
-	int	i = 0;
 	while (!user->commands.empty())
 	{
-		std::cout << i++ << std::endl;
 		std::string cmd = user->commands.front();
 		if (cmd.length() < 2)
 		{
