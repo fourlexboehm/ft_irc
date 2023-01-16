@@ -15,14 +15,17 @@ std::vector<std::string> getUserNames(std::string cmd)
 	{
 		if (cmd.at(i) == ',')
 		{
+			std::cout << "USER: <" << temp << ">" << std::endl;
 			list.push_back(temp);
 			temp.clear();
 			continue;
 		}
-		else if (cmd.at(i) != ' ')
-			temp += cmd.at(i);
+		else if (cmd.at(i) == ' ')
+			continue;
+		temp += cmd.at(i);
 	}
 	temp += cmd.at(i);
+	std::cout << "USER: <" << temp << ">" << std::endl;
 	list.push_back(temp);
 	return (list);
 }
@@ -72,9 +75,13 @@ void Server::executeCommand(user_t *user, const std::string &cmd)
 	}
 	else if (cmd.find("NOTICE") == 0)
 	{
-		std::vector<std::string> list = getUserNames(cmd);
+		std::vector<std::string> list = getUserNames(cmd.substr(0, cmd.find(':') - 1));
+		std::string message = cmd.substr(cmd.find(':') + 1);
 		for (size_t i = 0; i < list.size(); i++)
-			this->forwardMessage(cmd, this->users[list[i]]);
+		{
+			if (this->users.find(list[i]) != this->users.end())
+				this->sendChannelMsg(user, this->users[list[i]], "", user->nickname + ":" + message);
+		}
 	}
 	else if (cmd.find("PING") == 0)
 	{
