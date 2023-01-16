@@ -152,8 +152,12 @@ void Server::kickUser(const std::string &cmd, user_t *user)
 		this->sendMessageRPL(user, "403", "Channel " + channel_name + " could not be found.\r");
 		return;
 	}
-	channel_user_t *kickee = channel->users[user_to_kick];
-	channel_user_t *kicker = channel->users[user->nickname];
+	channel_user_t *kickee = NULL;
+	channel_user_t *kicker = NULL;
+	if (channel->users.find(user_to_kick) != channel->users.end())
+		kickee = channel->users[user_to_kick];
+	if (channel->users.find(user->nickname) != channel->users.end())
+		kicker = channel->users[user->nickname];
 	if (!kickee || !kicker)
 	{
 		this->sendMessageRPL(user, "441", "User " + user_to_kick + " not found on " + channel_name + ".\r");
