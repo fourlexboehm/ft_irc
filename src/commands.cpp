@@ -2,6 +2,31 @@
 
 //todo: find way to cleanly close servers
 
+std::vector<std::string> getUserNames(std::string cmd)
+{
+	std::vector<std::string> list;
+	std::string temp;
+	int i = 0;
+	int len = cmd.size();
+
+	while (++i < len && cmd.at(i) != ' ');
+	
+	while (++i < len - 1)
+	{
+		if (cmd.at(i) == ',')
+		{
+			list.push_back(temp);
+			temp.clear();
+			continue;
+		}
+		else if (cmd.at(i) != ' ')
+			temp += cmd.at(i);
+	}
+	temp += cmd.at(i);
+	list.push_back(temp);
+	return (list);
+}
+
 void Server::executeCommand(user_t *user, const std::string &cmd)
 {
 	std::cout << user->nickname << " is executing command:" << std::endl;
@@ -47,7 +72,9 @@ void Server::executeCommand(user_t *user, const std::string &cmd)
 	}
 	else if (cmd.find("NOTICE") == 0)
 	{
-		;
+		std::vector<std::string> list = getUserNames(cmd);
+		for (size_t i = 0; i < list.size(); i++)
+			this->forwardMessage(cmd, this->users[list[i]]);
 	}
 	else if (cmd.find("PING") == 0)
 	{
