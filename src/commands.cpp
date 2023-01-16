@@ -75,8 +75,11 @@ void Server::executeCommand(user_t *user, const std::string &cmd)
 	}
 	else if (cmd.find("NOTICE") == 0)
 	{
+		if (cmd.find(':') == std::string::npos)
+			return ;
 		std::vector<std::string> list = getUserNames(cmd.substr(0, cmd.find(':') - 1));
-		std::string message = cmd.substr(cmd.find(':') + 1);
+		std::string message;
+		message = cmd.substr(cmd.find(':') + 1);
 		for (size_t i = 0; i < list.size(); i++)
 		{
 			if (this->users.find(list[i]) != this->users.end())
@@ -306,7 +309,9 @@ void Server::forwardMessage(const std::string &cmd, user_t *sender)
 	{
 		std::string chan = cmd.substr(8, cmd.find(':') - 9);
 		std::cout << "CHANNEL NAME: " << chan << std::endl;
-		channel_t *c = this->channels[chan];
+		channel_t *c = NULL;
+		if (this->channels.find(chan) != this->channels.end())
+			c = this->channels[chan];
 		if (c == NULL)
 			return;
 		if (!c->users[sender->nickname])
@@ -331,7 +336,10 @@ void Server::forwardMessage(const std::string &cmd, user_t *sender)
 	} else
 	{
 		std::string user = cmd.substr(8, cmd.find(':') - 9);
-		user_t *u = this->users[user];
+		
+		user_t *u = NULL;
+		if (this->users.find(user) != this->users.end())
+			u = this->users[user];
 		if (u && u->is_authenticated && u != sender)
 		{
 			sendChannelMsg(sender, u, "", cmd);
