@@ -30,8 +30,20 @@ void Server::executeCommand(user_t *user, const std::string &cmd)
 		this->channelWho(user, cmd);
 	else if (cmd.find("QUIT") == 0)
 	{
+		std::cout << "Sending quit message" << std::endl;
+		std::string quit_msg;
+		if (cmd.length() > 5)
+			quit_msg = cmd.substr(5, cmd.length() - 5);
+		else
+			quit_msg = user->nickname + " has quit the server.";
+			
+		for (std::map<std::string, channel_t *>::iterator it = this->channels.begin(); it != this->channels.end(); it++)
+		{
+			std::string tmp_cmd = "PART " + it->first + " :" + quit_msg;
+			std::cout << tmp_cmd << std::endl;
+			partMessage(tmp_cmd, user);
+		}
 		user->is_disconnected = true;
-		//todo: send message to channels user is in
 	}
 	else if (cmd.find("NOTICE") == 0)
 	{
@@ -129,7 +141,6 @@ void Server::kickUser(const std::string &cmd, user_t *user)
 }
 
 //void Server::make
-//todo:	check user is not already in channel
 
 void Server::joinChannel(user_t *user, const std::string &cmd)
 {
@@ -352,8 +363,6 @@ void Server::parseCommands(user_t *user)
 		if (cmd[cmd.size() - 1] != '\r' && cmd[cmd.size() - 1] != '\n')
 		{
 			std::cout << "Incomplete message: " << cmd << std::endl;
-			int w = cmd[cmd.size() - 1];
-			std::cout << w << std::endl;
 			//this message wasn't complete, so we'll handle it later
 			return;
 		}
