@@ -221,7 +221,7 @@ void Server::sendMessageRPL(user_t *user, std::string rpl_code, std::string mess
 
 void Server::clientCheck( void )
 {
-	if (users.empty())
+	if (users.empty() && pre_nick_users.empty())
 		return ;
 	//checking pre-nick users
 	for (std::set<user_t *>::iterator it = this->pre_nick_users.begin(); it != this->pre_nick_users.end(); it++)

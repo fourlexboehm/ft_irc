@@ -31,14 +31,18 @@ void Server::executeCommand(user_t *user, const std::string &cmd)
 	else if (cmd.find("QUIT") == 0)
 	{
 		user->is_disconnected = true;
-		//todo: remove user from irc
+		//todo: send message to channels user is in
+	}
+	else if (cmd.find("NOTICE") == 0)
+	{
+		;
 	}
 	else if (cmd.find("PING") == 0)
 	{
 		if (cmd.substr(5).compare(this->host) == 1)
 		{
 			this->sendMessageRPL(user, "PONG", cmd.substr(5));
-			this->sendMessageRPL(user, "", "PONG");
+			this->sendMessageRPL(user, "", ":PONG");
 		}
 //		else
 //			this->sendMessageRPL(user, "PONG", "");
